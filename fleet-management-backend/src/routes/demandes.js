@@ -115,7 +115,7 @@ router.get('/demandes-carburant', authentifier, async (req, res) => {
       params.push(date_fin);
     }
     
-    query += ' ORDER BY dc.created_at DESC';
+    query += ' ORDER BY dc.date_demande DESC';
     
     const result = await pool.query(query, params);
     res.json({ success: true, data: result.rows, count: result.rows.length });
@@ -314,7 +314,16 @@ router.post('/demandes-voiture', authentifier, async (req, res) => {
     await client.query('COMMIT');
     
     // Récupérer la demande mise à jour
-    const finalResult = await client.query('SELECT * FROM demandes_voiture WHERE id = $1', [demande.id]);
+    const finalResult = await client.query(`
+          INSERT INTO demandes_voiture (
+            demandeur_id, date_proposee, objet, itineraire,
+            personnes_transportees, heure_depart_souhaitee,
+            heure_retour_probable, statut
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7, 'en_attente_logistique')
+          RETURNING *
+        `, [req.user.id, date_proposee, objet, itineraire || null, 
+            personnes_transportees || null, heure_depart_souhaitee || null, 
+            heure_retour_probable || null]);
     
     res.status(201).json({ 
       success: true, 
@@ -368,7 +377,7 @@ router.get('/demandes-voiture', authentifier, async (req, res) => {
       query += ` AND dv.statut IN ('en_attente_raf', 'approuve_raf')`;
     }
     
-    query += ' ORDER BY dv.date_proposee ASC, dv.created_at DESC';
+    query += ' ORDER BY dv.date_debut ASC, dv.date_demande DESC';
     
     const result = await pool.query(query, params);
     res.json({ success: true, data: result.rows, count: result.rows.length });

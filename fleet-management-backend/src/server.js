@@ -118,14 +118,14 @@ app.get('/api/stats', async (req, res) => {
       SELECT 
         COUNT(DISTINCT CASE WHEN statut = 'disponible' THEN id END) as vehicules_disponibles,
         COUNT(DISTINCT CASE WHEN statut = 'en_mission' THEN id END) as vehicules_en_mission,
-        COUNT(DISTINCT CASE WHEN statut = 'maintenance' THEN id END) as vehicules_maintenance
+        COUNT(DISTINCT CASE WHEN statut = 'en_entretien' THEN id END) as vehicules_maintenance
       FROM vehicules
     `);
     
     const demandesStats = await pool.query(`
       SELECT 
-        COUNT(CASE WHEN statut LIKE '%attente%' THEN 1 END) as demandes_en_attente,
-        COUNT(CASE WHEN statut = 'valide' THEN 1 END) as demandes_validees,
+        COUNT(CASE WHEN statut::text LIKE '%attente%' THEN 1 END) as demandes_en_attente,
+        COUNT(CASE WHEN statut::text = 'valide' THEN 1 END) as demandes_validees,
         COUNT(*) as total_demandes
       FROM (
         SELECT statut FROM demandes_carburant

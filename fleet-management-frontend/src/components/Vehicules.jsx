@@ -1,6 +1,6 @@
 // fleet-management-frontend/src/components/Vehicules.jsx
 import React, { useState, useEffect } from 'react';
-import { Plus, Edit, Eye, Trash2, Wrench, FileText, Car, AlertCircle } from 'lucide-react';
+import { Plus, Edit, Eye, Trash2, Wrench, FileText, Car, AlertCircle, XCircle } from 'lucide-react';
 import { vehiculesAPI, handleAPIError } from '../services/api';
 
 const Vehicules = ({ userRole }) => {

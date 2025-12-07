@@ -67,7 +67,7 @@ router.get('/chauffeurs/:id', authentifier, async (req, res) => {
         u.email,
         u.telephone,
         u.service,
-        u.est_actif,
+        u.actif as est_actif,
         COUNT(DISTINCT m.id) as nombre_missions,
         SUM(m.kilometrage_retour - m.kilometrage_depart) as total_km_parcourus,
         AVG(m.kilometrage_retour - m.kilometrage_depart) as moyenne_km_mission
@@ -75,7 +75,7 @@ router.get('/chauffeurs/:id', authentifier, async (req, res) => {
       JOIN utilisateurs u ON c.utilisateur_id = u.id
       LEFT JOIN demandes_voiture m ON c.id = m.chauffeur_id AND m.statut = 'terminee'
       WHERE c.id = $1
-      GROUP BY c.id, u.nom, u.prenom, u.email, u.telephone, u.service, u.est_actif
+      GROUP BY c.id, u.nom, u.prenom, u.email, u.telephone, u.service, u.actif
     `, [id]);
     
     if (result.rows.length === 0) {
@@ -298,7 +298,7 @@ router.put('/chauffeurs/:id/desactiver',
       
       // Désactiver l'utilisateur
       await client.query(
-        'UPDATE utilisateurs SET est_actif = false WHERE id = (SELECT utilisateur_id FROM chauffeurs WHERE id = $1)',
+        'UPDATE utilisateurs SET actif = false WHERE id = (SELECT utilisateur_id FROM chauffeurs WHERE id = $1)',
         [id]
       );
       

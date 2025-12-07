@@ -70,12 +70,19 @@ import axios from 'axios';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
+const mockToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwicm9sZSI6ImFkbWluIiwiZW1haWwiOiJhZG1pbkBwcmlydGVtLm1nIiwiaWF0IjoxNzMzNTY4MDAwfQ.mock';
+localStorage.setItem('token', mockToken);
+
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 30000, // 30 secondes
+  timeout: 30000,
+  // 🔴 AJOUTE ÇA
+  validateStatus: function (status) {
+    return status < 500; // Accepte les 401, 403, etc. sans retry
+  }
 });
 
 // Intercepteur pour ajouter le token JWT
@@ -278,9 +285,8 @@ import App from './App.jsx'
 import './index.css'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
+  // 🔴 DÉSACTIVER StrictMode temporairement pour debug
+  <App />
 )
 
 ────────────────── fleet-management-frontend/src/index.css ──────────────────
@@ -330,10 +336,534 @@ input, select, textarea {
   font-size: inherit;
 }
 
+────────────────── fleet-management-frontend/src/assets/react.svg ──────────────────
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" role="img" class="iconify iconify--logos" width="35.93" height="32" preserveAspectRatio="xMidYMid meet" viewBox="0 0 256 228"><path fill="#00D8FF" d="M210.483 73.824a171.49 171.49 0 0 0-8.24-2.597c.465-1.9.893-3.777 1.273-5.621c6.238-30.281 2.16-54.676-11.769-62.708c-13.355-7.7-35.196.329-57.254 19.526a171.23 171.23 0 0 0-6.375 5.848a155.866 155.866 0 0 0-4.241-3.917C100.759 3.829 77.587-4.822 63.673 3.233C50.33 10.957 46.379 33.89 51.995 62.588a170.974 170.974 0 0 0 1.892 8.48c-3.28.932-6.445 1.924-9.474 2.98C17.309 83.498 0 98.307 0 113.668c0 15.865 18.582 31.778 46.812 41.427a145.52 145.52 0 0 0 6.921 2.165a167.467 167.467 0 0 0-2.01 9.138c-5.354 28.2-1.173 50.591 12.134 58.266c13.744 7.926 36.812-.22 59.273-19.855a145.567 145.567 0 0 0 5.342-4.923a168.064 168.064 0 0 0 6.92 6.314c21.758 18.722 43.246 26.282 56.54 18.586c13.731-7.949 18.194-32.003 12.4-61.268a145.016 145.016 0 0 0-1.535-6.842c1.62-.48 3.21-.974 4.76-1.488c29.348-9.723 48.443-25.443 48.443-41.52c0-15.417-17.868-30.326-45.517-39.844Zm-6.365 70.984c-1.4.463-2.836.91-4.3 1.345c-3.24-10.257-7.612-21.163-12.963-32.432c5.106-11 9.31-21.767 12.459-31.957c2.619.758 5.16 1.557 7.61 2.4c23.69 8.156 38.14 20.213 38.14 29.504c0 9.896-15.606 22.743-40.946 31.14Zm-10.514 20.834c2.562 12.94 2.927 24.64 1.23 33.787c-1.524 8.219-4.59 13.698-8.382 15.893c-8.067 4.67-25.32-1.4-43.927-17.412a156.726 156.726 0 0 1-6.437-5.87c7.214-7.889 14.423-17.06 21.459-27.246c12.376-1.098 24.068-2.894 34.671-5.345a134.17 134.17 0 0 1 1.386 6.193ZM87.276 214.515c-7.882 2.783-14.16 2.863-17.955.675c-8.075-4.657-11.432-22.636-6.853-46.752a156.923 156.923 0 0 1 1.869-8.499c10.486 2.32 22.093 3.988 34.498 4.994c7.084 9.967 14.501 19.128 21.976 27.15a134.668 134.668 0 0 1-4.877 4.492c-9.933 8.682-19.886 14.842-28.658 17.94ZM50.35 144.747c-12.483-4.267-22.792-9.812-29.858-15.863c-6.35-5.437-9.555-10.836-9.555-15.216c0-9.322 13.897-21.212 37.076-29.293c2.813-.98 5.757-1.905 8.812-2.773c3.204 10.42 7.406 21.315 12.477 32.332c-5.137 11.18-9.399 22.249-12.634 32.792a134.718 134.718 0 0 1-6.318-1.979Zm12.378-84.26c-4.811-24.587-1.616-43.134 6.425-47.789c8.564-4.958 27.502 2.111 47.463 19.835a144.318 144.318 0 0 1 3.841 3.545c-7.438 7.987-14.787 17.08-21.808 26.988c-12.04 1.116-23.565 2.908-34.161 5.309a160.342 160.342 0 0 1-1.76-7.887Zm110.427 27.268a347.8 347.8 0 0 0-7.785-12.803c8.168 1.033 15.994 2.404 23.343 4.08c-2.206 7.072-4.956 14.465-8.193 22.045a381.151 381.151 0 0 0-7.365-13.322Zm-45.032-43.861c5.044 5.465 10.096 11.566 15.065 18.186a322.04 322.04 0 0 0-30.257-.006c4.974-6.559 10.069-12.652 15.192-18.18ZM82.802 87.83a323.167 323.167 0 0 0-7.227 13.238c-3.184-7.553-5.909-14.98-8.134-22.152c7.304-1.634 15.093-2.97 23.209-3.984a321.524 321.524 0 0 0-7.848 12.897Zm8.081 65.352c-8.385-.936-16.291-2.203-23.593-3.793c2.26-7.3 5.045-14.885 8.298-22.6a321.187 321.187 0 0 0 7.257 13.246c2.594 4.48 5.28 8.868 8.038 13.147Zm37.542 31.03c-5.184-5.592-10.354-11.779-15.403-18.433c4.902.192 9.899.29 14.978.29c5.218 0 10.376-.117 15.453-.343c-4.985 6.774-10.018 12.97-15.028 18.486Zm52.198-57.817c3.422 7.8 6.306 15.345 8.596 22.52c-7.422 1.694-15.436 3.058-23.88 4.071a382.417 382.417 0 0 0 7.859-13.026a347.403 347.403 0 0 0 7.425-13.565Zm-16.898 8.101a358.557 358.557 0 0 1-12.281 19.815a329.4 329.4 0 0 1-23.444.823c-7.967 0-15.716-.248-23.178-.732a310.202 310.202 0 0 1-12.513-19.846h.001a307.41 307.41 0 0 1-10.923-20.627a310.278 310.278 0 0 1 10.89-20.637l-.001.001a307.318 307.318 0 0 1 12.413-19.761c7.613-.576 15.42-.876 23.31-.876H128c7.926 0 15.743.303 23.354.883a329.357 329.357 0 0 1 12.335 19.695a358.489 358.489 0 0 1 11.036 20.54a329.472 329.472 0 0 1-11 20.722Zm22.56-122.124c8.572 4.944 11.906 24.881 6.52 51.026c-.344 1.668-.73 3.367-1.15 5.09c-10.622-2.452-22.155-4.275-34.23-5.408c-7.034-10.017-14.323-19.124-21.64-27.008a160.789 160.789 0 0 1 5.888-5.4c18.9-16.447 36.564-22.941 44.612-18.3ZM128 90.808c12.625 0 22.86 10.235 22.86 22.86s-10.235 22.86-22.86 22.86s-22.86-10.235-22.86-22.86s10.235-22.86 22.86-22.86Z"></path></svg>
+
+────────────────── fleet-management-frontend/src/App.jsx ──────────────────
+// fleet-management-frontend/src/App.jsx
+import React, { useState, useEffect } from 'react';
+import { Car, Fuel, FileText, Users, BarChart3, DollarSign } from 'lucide-react';
+import Dashboard from './components/Dashboard';
+import DemandesCarburant from './components/DemandesCarburant';
+import DemandesVoiture from './components/DemandesVoiture';
+import SuiviCarburant from './components/SuiviCarburant';
+import Vehicules from './components/Vehicules';
+import Chauffeurs from './components/Chauffeurs';
+import { authAPI } from './services/api';
+import './App.css';
+
+function App() {
+  const [ongletActif, setOngletActif] = useState('dashboard');
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    // CORRECTION: Utiliser un useEffect qui ne s'exécute qu'une fois
+    const mockUser = {
+      id: 1,
+      nom: 'Admin',
+      prenom: 'Système',
+      email: 'admin@prirtem.mg',
+      role: 'admin'
+    };
+    setUser(mockUser);
+  }, []); // 🔴 IMPORTANT: Tableau vide pour une seule exécution
+
+  const handleRoleChange = (newRole) => {
+    setUser(prev => ({ ...prev, role: newRole })); // 🔴 CORRECTION: Utiliser la forme fonctionnelle
+  };
+
+  // 🔴 CORRECTION: Mémoriser la fonction pour éviter les re-renders
+  const renderContent = React.useMemo(() => {
+    switch (ongletActif) {
+      case 'dashboard':
+        return <Dashboard userRole={user?.role} />;
+      case 'demandes_carburant':
+        return <DemandesCarburant userRole={user?.role} userId={user?.id} />;
+      case 'demandes_voiture':
+        return <DemandesVoiture userRole={user?.role} userId={user?.id} />;
+      case 'suivi_carburant':
+        return <SuiviCarburant userRole={user?.role} />;
+      case 'vehicules':
+        return <Vehicules userRole={user?.role} />;
+      case 'chauffeurs':
+        return <Chauffeurs userRole={user?.role} />;
+      default:
+        return <Dashboard userRole={user?.role} />;
+    }
+  }, [ongletActif, user?.role, user?.id]); // 🔴 Dépendances minimales
+
+  const menuItems = [
+    { id: 'dashboard', label: 'Dashboard', icon: BarChart3, roles: ['demandeur', 'logistique', 'raf', 'admin'] },
+    { id: 'demandes_carburant', label: 'Demandes Carburant', icon: Fuel, roles: ['demandeur', 'logistique', 'raf', 'admin'] },
+    { id: 'demandes_voiture', label: 'Demandes Voiture', icon: FileText, roles: ['demandeur', 'logistique', 'raf', 'admin'] },
+    { id: 'suivi_carburant', label: 'Suivi Carburant', icon: DollarSign, roles: ['logistique', 'admin'] },
+    { id: 'vehicules', label: 'Véhicules', icon: Car, roles: ['logistique', 'admin'] },
+    { id: 'chauffeurs', label: 'Chauffeurs', icon: Users, roles: ['logistique', 'admin'] }
+  ];
+
+  const visibleMenuItems = React.useMemo(() => 
+    menuItems.filter(item => item.roles.includes(user?.role)),
+    [user?.role]
+  );
+
+  if (!user) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Chargement...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="app">
+      <nav className="navbar">
+        <div className="navbar-content">
+          <div className="navbar-brand">
+            <div className="logo">
+              <Car size={32} />
+            </div>
+            <div className="brand-text">
+              <h1>PRIRTEM Fleet</h1>
+              <p>Système de Gestion Intégré</p>
+            </div>
+          </div>
+          
+          <div className="navbar-actions">
+            <select
+              value={user.role}
+              onChange={(e) => handleRoleChange(e.target.value)}
+              className="role-selector"
+            >
+              <option value="demandeur">Demandeur</option>
+              <option value="logistique">Logistique</option>
+              <option value="raf">RAF</option>
+              <option value="admin">Admin</option>
+            </select>
+            
+            <div className="user-info">
+              <span>{user.nom} {user.prenom}</span>
+              <span className="user-role">{user.role}</span>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      <div className="nav-menu">
+        <div className="nav-menu-content">
+          {visibleMenuItems.map(item => {
+            const Icon = item.icon;
+            return (
+              <button
+                key={item.id}
+                onClick={() => setOngletActif(item.id)}
+                className={`nav-item ${ongletActif === item.id ? 'active' : ''}`}
+              >
+                <Icon size={18} />
+                <span>{item.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <main className="main-content">
+        <div className="content-wrapper">
+          {renderContent}
+        </div>
+      </main>
+    </div>
+  );
+}
+
+export default App;
+
+────────────────── fleet-management-frontend/src/App.css ──────────────────
+/* fleet-management-frontend/src/App.css */
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Navbar */
+.navbar {
+  background: white;
+  border-bottom: 1px solid var(--border);
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+}
+
+.navbar-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 1rem 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.navbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.logo {
+  background: var(--primary);
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.brand-text h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.brand-text p {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.navbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.role-selector {
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: white;
+  font-size: 0.875rem;
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.user-info span:first-child {
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.user-role {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+}
+
+/* Menu Navigation */
+.nav-menu {
+  background: white;
+  border-bottom: 1px solid var(--border);
+}
+
+.nav-menu-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  display: flex;
+  gap: 0.25rem;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+  font-size: 0.875rem;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+}
+
+.nav-item:hover {
+  color: var(--text-primary);
+  background: var(--bg-gray);
+}
+
+.nav-item.active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+}
+
+/* Main Content */
+.main-content {
+  flex: 1;
+  background: var(--bg-gray);
+}
+
+.content-wrapper {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+
+/* Cards */
+.card {
+  background: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.card-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  font-size: 0.875rem;
+  transition: all 0.2s;
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: white;
+}
+
+.btn-primary:hover {
+  background: var(--primary-dark);
+}
+
+.btn-success {
+  background: var(--success);
+  color: white;
+}
+
+.btn-success:hover {
+  background: #16a34a;
+}
+
+.btn-secondary {
+  background: white;
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+}
+
+.btn-secondary:hover {
+  background: var(--bg-gray);
+}
+
+/* Table */
+.table-container {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+thead {
+  background: var(--bg-gray);
+}
+
+th {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+td {
+  padding: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+tr:hover {
+  background: var(--bg-gray);
+}
+
+/* Badge */
+.badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.badge-success {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.badge-warning {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.badge-error {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.badge-info {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  padding: 1rem;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 0.5rem;
+  max-width: 600px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 2rem;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.modal-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+/* Form */
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  font-size: 0.875rem;
+  color: var(--text-primary);
+}
+
+.form-input, .form-select, .form-textarea {
+  width: 100%;
+  padding: 0.625rem 0.875rem;
+  border: 1px solid var(--border);
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+}
+
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.form-textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+/* Grid */
+.grid {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.grid-cols-2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.grid-cols-3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.grid-cols-4 {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+/* Loading */
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 300px;
+  font-size: 1.125rem;
+  color: var(--text-secondary);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .navbar-content {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .nav-menu-content {
+    flex-wrap: wrap;
+  }
+  
+  .grid-cols-2, .grid-cols-3, .grid-cols-4 {
+    grid-template-columns: 1fr;
+  }
+}
+
+────────────────── fleet-management-frontend/README.md ──────────────────
+# React + Vite
+
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+
+Currently, two official plugins are available:
+
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+
+## React Compiler
+
+The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+
+## Expanding the ESLint configuration
+
+If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+
+
 ────────────────── fleet-management-frontend/src/components/Vehicules.jsx ──────────────────
 // fleet-management-frontend/src/components/Vehicules.jsx
 import React, { useState, useEffect } from 'react';
-import { Plus, Edit, Eye, Trash2, Wrench, FileText, Car, AlertCircle } from 'lucide-react';
+import { Plus, Edit, Eye, Trash2, Wrench, FileText, Car, AlertCircle, XCircle } from 'lucide-react';
 import { vehiculesAPI, handleAPIError } from '../services/api';
 
 const Vehicules = ({ userRole }) => {
@@ -841,9 +1371,9 @@ const Vehicules = ({ userRole }) => {
 export default Vehicules;
 
 ────────────────── fleet-management-frontend/src/components/SuiviCarburant.jsx ──────────────────
-// fleet-management-frontend/src/components/SuiviCarburant.jsx
+// fleet-management-frontend/src/components/SuiviCarburant.jsx - AMÉLIORÉ
 import React, { useState, useEffect } from 'react';
-import { Upload, Download, Filter, Search, AlertCircle } from 'lucide-react';
+import { Upload, Download, Filter, Search, AlertCircle, CheckCircle, XCircle, FileText } from 'lucide-react';
 import { suiviCarburantAPI, importAPI, handleAPIError } from '../services/api';
 
 const SuiviCarburant = ({ userRole }) => {
@@ -851,6 +1381,9 @@ const SuiviCarburant = ({ userRole }) => {
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadResult, setUploadResult] = useState(null);
+  const [showResultModal, setShowResultModal] = useState(false);
+  
   const [filtres, setFiltres] = useState({
     type_suivi: '',
     date_debut: '',
@@ -883,6 +1416,7 @@ const SuiviCarburant = ({ userRole }) => {
 
     setUploading(true);
     setUploadProgress(0);
+    setUploadResult(null);
 
     try {
       const response = await importAPI.excel(file, (progressEvent) => {
@@ -891,7 +1425,8 @@ const SuiviCarburant = ({ userRole }) => {
       });
 
       if (response.data.success) {
-        alert(`Import réussi!\nType détecté: ${response.data.typeFichier}\nSuccès: ${response.data.resultats.succes}\nAvertissements: ${response.data.resultats.avertissements}\nErreurs: ${response.data.resultats.erreurs}`);
+        setUploadResult(response.data);
+        setShowResultModal(true);
         chargerSuivis();
       }
     } catch (error) {
@@ -923,6 +1458,22 @@ const SuiviCarburant = ({ userRole }) => {
           {uploading ? `Import... ${uploadProgress}%` : 'Importer Excel'}
         </label>
       </div>
+
+      {/* Barre de progression */}
+      {uploading && (
+        <div className="card">
+          <div className="mb-2 flex justify-between text-sm">
+            <span>Import en cours...</span>
+            <span>{uploadProgress}%</span>
+          </div>
+          <div className="w-full bg-gray-200 rounded-full h-2">
+            <div 
+              className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+              style={{ width: `${uploadProgress}%` }}
+            ></div>
+          </div>
+        </div>
+      )}
 
       {/* Filtres */}
       <div className="card">
@@ -977,12 +1528,19 @@ const SuiviCarburant = ({ userRole }) => {
             />
           </div>
         </div>
+
+        <div className="mt-3 text-sm text-gray-600">
+          <strong>{suivis.length}</strong> entrée(s) trouvée(s)
+        </div>
       </div>
 
       {/* Tableau */}
       <div className="card">
         {loading ? (
-          <div className="text-center py-12">Chargement...</div>
+          <div className="text-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="text-gray-600 mt-4">Chargement...</p>
+          </div>
         ) : (
           <div className="table-container">
             <table>
@@ -1003,7 +1561,11 @@ const SuiviCarburant = ({ userRole }) => {
                 {suivis.length === 0 ? (
                   <tr>
                     <td colSpan="9" className="text-center py-12 text-gray-500">
-                      Aucun suivi trouvé. Importez un fichier Excel pour commencer.
+                      <div className="flex flex-col items-center gap-3">
+                        <FileText size={48} className="text-gray-300" />
+                        <p className="text-lg font-medium">Aucun suivi trouvé</p>
+                        <p className="text-sm">Importez un fichier Excel pour commencer</p>
+                      </div>
                     </td>
                   </tr>
                 ) : (
@@ -1047,6 +1609,111 @@ const SuiviCarburant = ({ userRole }) => {
           </div>
         )}
       </div>
+
+      {/* Modal Résultat d'Import */}
+      {showResultModal && uploadResult && (
+        <div className="modal-overlay" onClick={() => setShowResultModal(false)}>
+          <div className="modal-content max-w-3xl" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2 className="modal-title">Résultat de l'import</h2>
+              <button onClick={() => setShowResultModal(false)}>
+                <XCircle size={24} className="text-gray-500" />
+              </button>
+            </div>
+
+            <div className="space-y-6">
+              {/* Résumé global */}
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <h3 className="font-semibold text-blue-900 mb-2">
+                  📊 Fichier: {uploadResult.nomFichier}
+                </h3>
+                <div className="grid grid-cols-3 gap-4 mt-3">
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-green-600">{uploadResult.resultats.succes}</div>
+                    <div className="text-sm text-gray-600">Succès</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-orange-600">{uploadResult.resultats.avertissements}</div>
+                    <div className="text-sm text-gray-600">Avertissements</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-red-600">{uploadResult.resultats.erreurs}</div>
+                    <div className="text-sm text-gray-600">Erreurs</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Détails par feuille */}
+              <div>
+                <h3 className="font-semibold mb-3">📄 Détails par feuille ({uploadResult.nombreFeuilles} feuille(s))</h3>
+                <div className="space-y-3">
+                  {Object.entries(uploadResult.parFeuille).map(([nomFeuille, stats]) => (
+                    <div key={nomFeuille} className="border rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="font-medium">{nomFeuille}</h4>
+                        <span className="badge badge-info">{stats.type}</span>
+                      </div>
+                      
+                      <div className="grid grid-cols-4 gap-2 text-sm">
+                        <div>
+                          <span className="text-gray-600">Total:</span>
+                          <span className="font-medium ml-2">{stats.lignes}</span>
+                        </div>
+                        <div className="flex items-center gap-1 text-green-600">
+                          <CheckCircle size={14} />
+                          <span className="font-medium">{stats.succes}</span>
+                        </div>
+                        <div className="flex items-center gap-1 text-orange-600">
+                          <AlertCircle size={14} />
+                          <span className="font-medium">{stats.avertissements}</span>
+                        </div>
+                        <div className="flex items-center gap-1 text-red-600">
+                          <XCircle size={14} />
+                          <span className="font-medium">{stats.erreurs}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Détails des erreurs */}
+              {uploadResult.details && uploadResult.details.length > 0 && (
+                <div>
+                  <h3 className="font-semibold mb-3">⚠️ Détails des anomalies (premières 10)</h3>
+                  <div className="space-y-2 max-h-60 overflow-y-auto">
+                    {uploadResult.details.slice(0, 10).map((detail, index) => (
+                      <div 
+                        key={index} 
+                        className={`text-sm p-2 rounded ${
+                          detail.statut === 'error' ? 'bg-red-50 text-red-800' :
+                          'bg-orange-50 text-orange-800'
+                        }`}
+                      >
+                        <div className="font-medium">
+                          Feuille "{detail.feuille}", Ligne {detail.ligne}
+                        </div>
+                        <div className="text-xs mt-1">
+                          {detail.erreurs?.join(', ') || detail.message}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="flex justify-end gap-3 pt-4 border-t">
+                <button 
+                  onClick={() => setShowResultModal(false)} 
+                  className="btn btn-primary"
+                >
+                  Fermer
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -1453,6 +2120,9 @@ const DemandesVoiture = ({ userRole, userId }) => {
 };
 
 export default DemandesVoiture;
+
+────────────────── fleet-management-frontend/public/vite.svg ──────────────────
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" role="img" class="iconify iconify--logos" width="31.88" height="32" preserveAspectRatio="xMidYMid meet" viewBox="0 0 256 257"><defs><linearGradient id="IconifyId1813088fe1fbc01fb466" x1="-.828%" x2="57.636%" y1="7.652%" y2="78.411%"><stop offset="0%" stop-color="#41D1FF"></stop><stop offset="100%" stop-color="#BD34FE"></stop></linearGradient><linearGradient id="IconifyId1813088fe1fbc01fb467" x1="43.376%" x2="50.316%" y1="2.242%" y2="89.03%"><stop offset="0%" stop-color="#FFEA83"></stop><stop offset="8.333%" stop-color="#FFDD35"></stop><stop offset="100%" stop-color="#FFA800"></stop></linearGradient></defs><path fill="url(#IconifyId1813088fe1fbc01fb466)" d="M255.153 37.938L134.897 252.976c-2.483 4.44-8.862 4.466-11.382.048L.875 37.958c-2.746-4.814 1.371-10.646 6.827-9.67l120.385 21.517a6.537 6.537 0 0 0 2.322-.004l117.867-21.483c5.438-.991 9.574 4.796 6.877 9.62Z"></path><path fill="url(#IconifyId1813088fe1fbc01fb467)" d="M185.432.063L96.44 17.501a3.268 3.268 0 0 0-2.634 3.014l-5.474 92.456a3.268 3.268 0 0 0 3.997 3.378l24.777-5.718c2.318-.535 4.413 1.507 3.936 3.838l-7.361 36.047c-.495 2.426 1.782 4.5 4.151 3.78l15.304-4.649c2.372-.72 4.652 1.36 4.15 3.788l-11.698 56.621c-.732 3.542 3.979 5.473 5.943 2.437l1.313-2.028l72.516-144.72c1.215-2.423-.88-5.186-3.54-4.672l-25.505 4.922c-2.396.462-4.435-1.77-3.759-4.114l16.646-57.705c.677-2.35-1.37-4.583-3.769-4.113Z"></path></svg>
 
 ────────────────── fleet-management-frontend/src/components/DemandesCarburant.jsx ──────────────────
 // fleet-management-frontend/src/components/DemandesCarburant.jsx
@@ -2013,7 +2683,7 @@ export default DemandesCarburant;
 
 ────────────────── fleet-management-frontend/src/components/Dashboard.jsx ──────────────────
 // fleet-management-frontend/src/components/Dashboard.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Car, Clock, AlertCircle, Fuel, Plus, TrendingUp, 
   Users, FileText, Calendar, BarChart3 
@@ -2034,52 +2704,65 @@ const Dashboard = ({ userRole }) => {
   
   const [loading, setLoading] = useState(true);
   const [alertes, setAlertes] = useState([]);
-  const [recentActivities, setRecentActivities] = useState([]);
+  const [error, setError] = useState(null);
+  const hasFetched = useRef(false); // 🔴 Empêche les appels multiples
 
   useEffect(() => {
+    // 🔴 Protection contre les appels multiples
+    if (hasFetched.current) return;
+    hasFetched.current = true;
+
+    let isMounted = true;
+    
+    const chargerDonnees = async () => {
+      setLoading(true);
+      setError(null);
+      
+      try {
+        const statsResponse = await statsAPI.getGlobal();
+        
+        if (isMounted && statsResponse.data.success && statsResponse.data.global) {
+          setStats(statsResponse.data.global);
+        }
+
+        try {
+          const alertesResponse = await dashboardAPI.alertes();
+          if (isMounted && alertesResponse.data.success) {
+            setAlertes(alertesResponse.data.data.slice(0, 5));
+          }
+        } catch (alertError) {
+          console.log('Alertes non disponibles');
+        }
+        
+      } catch (error) {
+        console.error('Erreur chargement dashboard:', error);
+        
+        if (isMounted) {
+          setError(handleAPIError(error).message);
+          setStats({
+            vehicules_disponibles: 12,
+            vehicules_en_mission: 5,
+            vehicules_maintenance: 2,
+            demandes_en_attente: 8,
+            demandes_validees: 45,
+            montant_total_mois: 15000000,
+            litres_total_mois: 2850,
+            consommation_moyenne: 15.3
+          });
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
     chargerDonnees();
-  }, []);
-
-  const chargerDonnees = async () => {
-    setLoading(true);
-    try {
-      // Charger les statistiques
-      const statsResponse = await statsAPI.getGlobal();
-      if (statsResponse.data.success && statsResponse.data.global) {
-        setStats(statsResponse.data.global);
-      }
-
-      // Charger les alertes
-      const alertesResponse = await dashboardAPI.alertes();
-      if (alertesResponse.data.success) {
-        setAlertes(alertesResponse.data.data.slice(0, 5));
-      }
-    } catch (error) {
-      console.error('Erreur chargement dashboard:', error);
-      const errorInfo = handleAPIError(error);
-      // Utiliser des données de démo en cas d'erreur
-      setStats({
-        vehicules_disponibles: 12,
-        vehicules_en_mission: 5,
-        vehicules_maintenance: 2,
-        demandes_en_attente: 8,
-        demandes_validees: 45,
-        montant_total_mois: 15000000,
-        litres_total_mois: 2850,
-        consommation_moyenne: 15.3
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const formatMontant = (montant) => {
-    if (!montant) return '0 Ar';
-    return new Intl.NumberFormat('fr-MG', {
-      style: 'decimal',
-      minimumFractionDigits: 0
-    }).format(montant) + ' Ar';
-  };
+    
+    return () => {
+      isMounted = false;
+    };
+  }, []); // 🔴 Dépendances vides
 
   const StatCard = ({ title, value, icon: Icon, color, subtitle }) => (
     <div className="card">
@@ -2098,23 +2781,6 @@ const Dashboard = ({ userRole }) => {
     </div>
   );
 
-  const ActionButton = ({ title, icon: Icon, color, onClick, description }) => (
-    <button
-      onClick={onClick}
-      className="flex flex-col items-center gap-3 p-6 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-all"
-    >
-      <div className={`bg-${color}-100 p-4 rounded-full`}>
-        <Icon size={32} className={`text-${color}-600`} />
-      </div>
-      <div className="text-center">
-        <span className="text-sm font-semibold block">{title}</span>
-        {description && (
-          <span className="text-xs text-gray-500 mt-1 block">{description}</span>
-        )}
-      </div>
-    </button>
-  );
-
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -2128,246 +2794,45 @@ const Dashboard = ({ userRole }) => {
 
   return (
     <div className="space-y-6">
-      {/* En-tête */}
+      {error && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 flex items-start gap-3">
+          <AlertCircle className="text-yellow-600 flex-shrink-0" size={20} />
+          <div>
+            <p className="font-medium text-yellow-800">Connexion au serveur limitée</p>
+            <p className="text-sm text-yellow-700 mt-1">{error}</p>
+          </div>
+        </div>
+      )}
+
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Tableau de Bord</h1>
-          <p className="text-gray-600 mt-1">
-            Bienvenue sur votre système de gestion Fleet
-          </p>
+          <p className="text-gray-600 mt-1">Bienvenue sur votre système de gestion Fleet</p>
         </div>
         <div className="flex items-center gap-2 text-sm text-gray-600">
           <Calendar size={16} />
           <span>{new Date().toLocaleDateString('fr-FR', { 
-            weekday: 'long', 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric' 
+            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
           })}</span>
         </div>
       </div>
 
-      {/* Statistiques principales */}
       <div className="grid grid-cols-4 gap-6">
-        <StatCard
-          title="Véhicules Disponibles"
-          value={stats.vehicules_disponibles || 0}
-          icon={Car}
-          color="green"
-          subtitle="Prêts à partir"
-        />
-        <StatCard
-          title="En Mission"
-          value={stats.vehicules_en_mission || 0}
-          icon={Clock}
-          color="blue"
-          subtitle="Actuellement utilisés"
-        />
-        <StatCard
-          title="Demandes en Attente"
-          value={stats.demandes_en_attente || 0}
-          icon={AlertCircle}
-          color="orange"
-          subtitle="À traiter"
-        />
-        <StatCard
-          title="Carburant du Mois"
-          value={stats.montant_total_mois ? `${(stats.montant_total_mois / 1000000).toFixed(1)}M` : '0'}
-          icon={Fuel}
-          color="purple"
-          subtitle={stats.litres_total_mois ? `${Math.round(stats.litres_total_mois)} litres` : '0 litres'}
-        />
-      </div>
-
-      {/* Statistiques secondaires */}
-      <div className="grid grid-cols-3 gap-6">
-        <div className="card">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="bg-blue-100 p-2 rounded">
-              <TrendingUp className="text-blue-600" size={20} />
-            </div>
-            <h3 className="font-semibold text-gray-900">Consommation Moyenne</h3>
-          </div>
-          <p className="text-2xl font-bold text-blue-600">
-            {stats.consommation_moyenne?.toFixed(1) || '0'} L/100km
-          </p>
-          <p className="text-xs text-gray-500 mt-1">Ce mois</p>
-        </div>
-
-        <div className="card">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="bg-green-100 p-2 rounded">
-              <FileText className="text-green-600" size={20} />
-            </div>
-            <h3 className="font-semibold text-gray-900">Demandes Validées</h3>
-          </div>
-          <p className="text-2xl font-bold text-green-600">
-            {stats.demandes_validees || 0}
-          </p>
-          <p className="text-xs text-gray-500 mt-1">Ce mois</p>
-        </div>
-
-        <div className="card">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="bg-orange-100 p-2 rounded">
-              <Car className="text-orange-600" size={20} />
-            </div>
-            <h3 className="font-semibold text-gray-900">En Maintenance</h3>
-          </div>
-          <p className="text-2xl font-bold text-orange-600">
-            {stats.vehicules_maintenance || 0}
-          </p>
-          <p className="text-xs text-gray-500 mt-1">Véhicules</p>
-        </div>
-      </div>
-
-      {/* Actions rapides */}
-      <div className="card">
-        <div className="flex items-center gap-2 mb-6">
-          <BarChart3 size={24} className="text-gray-700" />
-          <h2 className="text-xl font-bold text-gray-900">Actions Rapides</h2>
-        </div>
-        
-        <div className="grid grid-cols-4 gap-4">
-          {userRole === 'demandeur' && (
-            <>
-              <ActionButton
-                title="Demander Carburant"
-                icon={Fuel}
-                color="blue"
-                description="Nouvelle demande"
-                onClick={() => window.location.href = '#demandes-carburant'}
-              />
-              <ActionButton
-                title="Demander Véhicule"
-                icon={Car}
-                color="green"
-                description="Réserver un véhicule"
-                onClick={() => window.location.href = '#demandes-voiture'}
-              />
-            </>
-          )}
-          
-          {(userRole === 'logistique' || userRole === 'admin') && (
-            <>
-              <ActionButton
-                title="Ajouter Véhicule"
-                icon={Plus}
-                color="purple"
-                description="Nouveau véhicule"
-                onClick={() => window.location.href = '#vehicules'}
-              />
-              <ActionButton
-                title="Gérer Chauffeurs"
-                icon={Users}
-                color="indigo"
-                description="Équipe de conduite"
-                onClick={() => window.location.href = '#chauffeurs'}
-              />
-              <ActionButton
-                title="Import Excel"
-                icon={FileText}
-                color="blue"
-                description="Suivi carburant"
-                onClick={() => window.location.href = '#suivi-carburant'}
-              />
-            </>
-          )}
-          
-          {(userRole === 'raf' || userRole === 'admin') && (
-            <ActionButton
-              title="Valider Demandes"
-              icon={FileText}
-              color="green"
-              description={`${stats.demandes_en_attente || 0} en attente`}
-              onClick={() => window.location.href = '#demandes-carburant'}
-            />
-          )}
-        </div>
-      </div>
-
-      {/* Alertes et Activités récentes */}
-      <div className="grid grid-cols-2 gap-6">
-        {/* Alertes */}
-        <div className="card">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold flex items-center gap-2">
-              <AlertCircle className="text-orange-600" size={20} />
-              Alertes Récentes
-            </h3>
-            {alertes.length > 0 && (
-              <span className="badge badge-warning">{alertes.length}</span>
-            )}
-          </div>
-          
-          <div className="space-y-3">
-            {alertes.length > 0 ? (
-              alertes.map((alerte, index) => (
-                <div key={index} className="flex items-start gap-3 p-3 bg-orange-50 rounded-lg border border-orange-200">
-                  <AlertCircle className="text-orange-600 flex-shrink-0 mt-1" size={16} />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900">{alerte.message}</p>
-                    {alerte.immatriculation && (
-                      <p className="text-xs text-gray-600 mt-1">
-                        Véhicule: {alerte.immatriculation}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="text-center py-8 text-gray-500">
-                <AlertCircle size={32} className="mx-auto mb-2 opacity-50" />
-                <p className="text-sm">Aucune alerte</p>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Activités récentes */}
-        <div className="card">
-          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-            <Clock className="text-blue-600" size={20} />
-            Activités Récentes
-          </h3>
-          
-          <div className="space-y-3">
-            <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
-              <div className="w-2 h-2 bg-blue-600 rounded-full mt-2"></div>
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900">Demande de carburant approuvée</p>
-                <p className="text-xs text-gray-600 mt-1">Il y a 2 heures</p>
-              </div>
-            </div>
-            
-            <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
-              <div className="w-2 h-2 bg-green-600 rounded-full mt-2"></div>
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900">Véhicule 39963WWT disponible</p>
-                <p className="text-xs text-gray-600 mt-1">Il y a 4 heures</p>
-              </div>
-            </div>
-            
-            <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
-              <div className="w-2 h-2 bg-purple-600 rounded-full mt-2"></div>
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900">Import Excel réussi</p>
-                <p className="text-xs text-gray-600 mt-1">Hier à 15:30</p>
-              </div>
-            </div>
-          </div>
-        </div>
+        <StatCard title="Véhicules Disponibles" value={stats.vehicules_disponibles || 0} icon={Car} color="green" subtitle="Prêts à partir" />
+        <StatCard title="En Mission" value={stats.vehicules_en_mission || 0} icon={Clock} color="blue" subtitle="Actuellement utilisés" />
+        <StatCard title="Demandes en Attente" value={stats.demandes_en_attente || 0} icon={AlertCircle} color="orange" subtitle="À traiter" />
+        <StatCard title="Carburant du Mois" value={stats.montant_total_mois ? `${(stats.montant_total_mois / 1000000).toFixed(1)}M` : '0'} icon={Fuel} color="purple" subtitle={stats.litres_total_mois ? `${Math.round(stats.litres_total_mois)} litres` : '0 litres'} />
       </div>
     </div>
   );
 };
 
-export default Dashboard;
+export default React.memo(Dashboard); // 🔴 Mémoisation du composant
 
 ────────────────── fleet-management-frontend/src/components/Chauffeurs.jsx ──────────────────
 // fleet-management-frontend/src/components/Chauffeurs.jsx
 import React, { useState, useEffect } from 'react';
-import { Plus, Edit, Eye, UserX, Users, Clock, TrendingUp, AlertCircle } from 'lucide-react';
+import { Plus, Edit, Eye, UserX, Users, Clock, TrendingUp, AlertCircle, XCircle } from 'lucide-react';
 import { chauffeursAPI, handleAPIError } from '../services/api';
 
 const Chauffeurs = ({ userRole }) => {
@@ -2927,523 +3392,6 @@ const Chauffeurs = ({ userRole }) => {
 };
 
 export default Chauffeurs;
-
-────────────────── fleet-management-frontend/src/App.jsx ──────────────────
-// fleet-management-frontend/src/App.jsx
-import React, { useState, useEffect } from 'react';
-import { Car, Fuel, FileText, Users, BarChart3, DollarSign } from 'lucide-react';
-import Dashboard from './components/Dashboard';
-import DemandesCarburant from './components/DemandesCarburant';
-import DemandesVoiture from './components/DemandesVoiture';
-import SuiviCarburant from './components/SuiviCarburant';
-import Vehicules from './components/Vehicules';
-import Chauffeurs from './components/Chauffeurs';
-import { authAPI } from './services/api';
-import './App.css';
-
-function App() {
-  const [ongletActif, setOngletActif] = useState('dashboard');
-  const [user, setUser] = useState(null);
-
-  useEffect(() => {
-    // Simuler un utilisateur connecté pour le développement
-    // En production, utiliser authAPI.getCurrentUser()
-    const mockUser = {
-      id: 1,
-      nom: 'Admin',
-      prenom: 'Système',
-      email: 'admin@prirtem.mg',
-      role: 'admin' // demandeur, logistique, raf, admin
-    };
-    setUser(mockUser);
-  }, []);
-
-  const handleRoleChange = (newRole) => {
-    setUser({ ...user, role: newRole });
-  };
-
-  const renderContent = () => {
-    switch (ongletActif) {
-      case 'dashboard':
-        return <Dashboard userRole={user?.role} />;
-      case 'demandes_carburant':
-        return <DemandesCarburant userRole={user?.role} userId={user?.id} />;
-      case 'demandes_voiture':
-        return <DemandesVoiture userRole={user?.role} userId={user?.id} />;
-      case 'suivi_carburant':
-        return <SuiviCarburant userRole={user?.role} />;
-      case 'vehicules':
-        return <Vehicules userRole={user?.role} />;
-      case 'chauffeurs':
-        return <Chauffeurs userRole={user?.role} />;
-      default:
-        return <Dashboard userRole={user?.role} />;
-    }
-  };
-
-  const menuItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: BarChart3, roles: ['demandeur', 'logistique', 'raf', 'admin'] },
-    { id: 'demandes_carburant', label: 'Demandes Carburant', icon: Fuel, roles: ['demandeur', 'logistique', 'raf', 'admin'] },
-    { id: 'demandes_voiture', label: 'Demandes Voiture', icon: FileText, roles: ['demandeur', 'logistique', 'raf', 'admin'] },
-    { id: 'suivi_carburant', label: 'Suivi Carburant', icon: DollarSign, roles: ['logistique', 'admin'] },
-    { id: 'vehicules', label: 'Véhicules', icon: Car, roles: ['logistique', 'admin'] },
-    { id: 'chauffeurs', label: 'Chauffeurs', icon: Users, roles: ['logistique', 'admin'] }
-  ];
-
-  const visibleMenuItems = menuItems.filter(item => 
-    item.roles.includes(user?.role)
-  );
-
-  return (
-    <div className="app">
-      {/* Navbar */}
-      <nav className="navbar">
-        <div className="navbar-content">
-          <div className="navbar-brand">
-            <div className="logo">
-              <Car size={32} />
-            </div>
-            <div className="brand-text">
-              <h1>PRIRTEM Fleet</h1>
-              <p>Système de Gestion Intégré</p>
-            </div>
-          </div>
-          
-          <div className="navbar-actions">
-            <select
-              value={user?.role || 'demandeur'}
-              onChange={(e) => handleRoleChange(e.target.value)}
-              className="role-selector"
-            >
-              <option value="demandeur">Demandeur</option>
-              <option value="logistique">Logistique</option>
-              <option value="raf">RAF</option>
-              <option value="admin">Admin</option>
-            </select>
-            
-            <div className="user-info">
-              <span>{user?.nom} {user?.prenom}</span>
-              <span className="user-role">{user?.role}</span>
-            </div>
-          </div>
-        </div>
-      </nav>
-
-      {/* Menu de navigation */}
-      <div className="nav-menu">
-        <div className="nav-menu-content">
-          {visibleMenuItems.map(item => {
-            const Icon = item.icon;
-            return (
-              <button
-                key={item.id}
-                onClick={() => setOngletActif(item.id)}
-                className={`nav-item ${ongletActif === item.id ? 'active' : ''}`}
-              >
-                <Icon size={18} />
-                <span>{item.label}</span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Contenu principal */}
-      <main className="main-content">
-        <div className="content-wrapper">
-          {user ? renderContent() : (
-            <div className="loading">Chargement...</div>
-          )}
-        </div>
-      </main>
-    </div>
-  );
-}
-
-export default App;
-
-────────────────── fleet-management-frontend/src/App.css ──────────────────
-/* fleet-management-frontend/src/App.css */
-.app {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
-/* Navbar */
-.navbar {
-  background: white;
-  border-bottom: 1px solid var(--border);
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
-}
-
-.navbar-content {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 1rem 1.5rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.navbar-brand {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.logo {
-  background: var(--primary);
-  padding: 0.5rem;
-  border-radius: 0.5rem;
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.brand-text h1 {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--text-primary);
-}
-
-.brand-text p {
-  font-size: 0.875rem;
-  color: var(--text-secondary);
-}
-
-.navbar-actions {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.role-selector {
-  padding: 0.5rem 1rem;
-  border: 1px solid var(--border);
-  border-radius: 0.5rem;
-  background: white;
-  font-size: 0.875rem;
-}
-
-.user-info {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-}
-
-.user-info span:first-child {
-  font-weight: 600;
-  font-size: 0.875rem;
-}
-
-.user-role {
-  font-size: 0.75rem;
-  color: var(--text-secondary);
-  text-transform: uppercase;
-}
-
-/* Menu Navigation */
-.nav-menu {
-  background: white;
-  border-bottom: 1px solid var(--border);
-}
-
-.nav-menu-content {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 0 1.5rem;
-  display: flex;
-  gap: 0.25rem;
-}
-
-.nav-item {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1.5rem;
-  color: var(--text-secondary);
-  font-weight: 500;
-  font-size: 0.875rem;
-  border-bottom: 2px solid transparent;
-  transition: all 0.2s;
-}
-
-.nav-item:hover {
-  color: var(--text-primary);
-  background: var(--bg-gray);
-}
-
-.nav-item.active {
-  color: var(--primary);
-  border-bottom-color: var(--primary);
-}
-
-/* Main Content */
-.main-content {
-  flex: 1;
-  background: var(--bg-gray);
-}
-
-.content-wrapper {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 2rem 1.5rem;
-}
-
-/* Cards */
-.card {
-  background: white;
-  border-radius: 0.5rem;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
-  padding: 1.5rem;
-}
-
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1.5rem;
-}
-
-.card-title {
-  font-size: 1.25rem;
-  font-weight: 700;
-}
-
-/* Buttons */
-.btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.625rem 1.25rem;
-  border-radius: 0.5rem;
-  font-weight: 500;
-  font-size: 0.875rem;
-  transition: all 0.2s;
-}
-
-.btn-primary {
-  background: var(--primary);
-  color: white;
-}
-
-.btn-primary:hover {
-  background: var(--primary-dark);
-}
-
-.btn-success {
-  background: var(--success);
-  color: white;
-}
-
-.btn-success:hover {
-  background: #16a34a;
-}
-
-.btn-secondary {
-  background: white;
-  color: var(--text-primary);
-  border: 1px solid var(--border);
-}
-
-.btn-secondary:hover {
-  background: var(--bg-gray);
-}
-
-/* Table */
-.table-container {
-  overflow-x: auto;
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-thead {
-  background: var(--bg-gray);
-}
-
-th {
-  padding: 0.75rem 1rem;
-  text-align: left;
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  color: var(--text-secondary);
-}
-
-td {
-  padding: 1rem;
-  border-top: 1px solid var(--border);
-}
-
-tr:hover {
-  background: var(--bg-gray);
-}
-
-/* Badge */
-.badge {
-  display: inline-block;
-  padding: 0.25rem 0.75rem;
-  border-radius: 9999px;
-  font-size: 0.75rem;
-  font-weight: 500;
-}
-
-.badge-success {
-  background: #d1fae5;
-  color: #065f46;
-}
-
-.badge-warning {
-  background: #fef3c7;
-  color: #92400e;
-}
-
-.badge-error {
-  background: #fee2e2;
-  color: #991b1b;
-}
-
-.badge-info {
-  background: #dbeafe;
-  color: #1e40af;
-}
-
-/* Modal */
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 50;
-  padding: 1rem;
-}
-
-.modal-content {
-  background: white;
-  border-radius: 0.5rem;
-  max-width: 600px;
-  width: 100%;
-  max-height: 90vh;
-  overflow-y: auto;
-  padding: 2rem;
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1.5rem;
-}
-
-.modal-title {
-  font-size: 1.5rem;
-  font-weight: 700;
-}
-
-/* Form */
-.form-group {
-  margin-bottom: 1rem;
-}
-
-.form-label {
-  display: block;
-  margin-bottom: 0.5rem;
-  font-weight: 500;
-  font-size: 0.875rem;
-  color: var(--text-primary);
-}
-
-.form-input, .form-select, .form-textarea {
-  width: 100%;
-  padding: 0.625rem 0.875rem;
-  border: 1px solid var(--border);
-  border-radius: 0.375rem;
-  font-size: 0.875rem;
-}
-
-.form-input:focus, .form-select:focus, .form-textarea:focus {
-  outline: none;
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-}
-
-.form-textarea {
-  resize: vertical;
-  min-height: 80px;
-}
-
-/* Grid */
-.grid {
-  display: grid;
-  gap: 1.5rem;
-}
-
-.grid-cols-2 {
-  grid-template-columns: repeat(2, 1fr);
-}
-
-.grid-cols-3 {
-  grid-template-columns: repeat(3, 1fr);
-}
-
-.grid-cols-4 {
-  grid-template-columns: repeat(4, 1fr);
-}
-
-/* Loading */
-.loading {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 300px;
-  font-size: 1.125rem;
-  color: var(--text-secondary);
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .navbar-content {
-    flex-direction: column;
-    gap: 1rem;
-  }
-  
-  .nav-menu-content {
-    flex-wrap: wrap;
-  }
-  
-  .grid-cols-2, .grid-cols-3, .grid-cols-4 {
-    grid-template-columns: 1fr;
-  }
-}
-
-────────────────── fleet-management-frontend/README.md ──────────────────
-# React + Vite
-
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
-
-Currently, two official plugins are available:
-
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
-
-
-────────────────── fleet-management-frontend/public/vite.svg ──────────────────
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" role="img" class="iconify iconify--logos" width="31.88" height="32" preserveAspectRatio="xMidYMid meet" viewBox="0 0 256 257"><defs><linearGradient id="IconifyId1813088fe1fbc01fb466" x1="-.828%" x2="57.636%" y1="7.652%" y2="78.411%"><stop offset="0%" stop-color="#41D1FF"></stop><stop offset="100%" stop-color="#BD34FE"></stop></linearGradient><linearGradient id="IconifyId1813088fe1fbc01fb467" x1="43.376%" x2="50.316%" y1="2.242%" y2="89.03%"><stop offset="0%" stop-color="#FFEA83"></stop><stop offset="8.333%" stop-color="#FFDD35"></stop><stop offset="100%" stop-color="#FFA800"></stop></linearGradient></defs><path fill="url(#IconifyId1813088fe1fbc01fb466)" d="M255.153 37.938L134.897 252.976c-2.483 4.44-8.862 4.466-11.382.048L.875 37.958c-2.746-4.814 1.371-10.646 6.827-9.67l120.385 21.517a6.537 6.537 0 0 0 2.322-.004l117.867-21.483c5.438-.991 9.574 4.796 6.877 9.62Z"></path><path fill="url(#IconifyId1813088fe1fbc01fb467)" d="M185.432.063L96.44 17.501a3.268 3.268 0 0 0-2.634 3.014l-5.474 92.456a3.268 3.268 0 0 0 3.997 3.378l24.777-5.718c2.318-.535 4.413 1.507 3.936 3.838l-7.361 36.047c-.495 2.426 1.782 4.5 4.151 3.78l15.304-4.649c2.372-.72 4.652 1.36 4.15 3.788l-11.698 56.621c-.732 3.542 3.979 5.473 5.943 2.437l1.313-2.028l72.516-144.72c1.215-2.423-.88-5.186-3.54-4.672l-25.505 4.922c-2.396.462-4.435-1.77-3.759-4.114l16.646-57.705c.677-2.35-1.37-4.583-3.769-4.113Z"></path></svg>
 
 ────────────────── fleet-management-frontend/package.json ──────────────────
 {
@@ -6470,9 +6418,6 @@ If you are developing a production application, we recommend using TypeScript wi
 }
 
 
-────────────────── fleet-management-frontend/src/assets/react.svg ──────────────────
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" role="img" class="iconify iconify--logos" width="35.93" height="32" preserveAspectRatio="xMidYMid meet" viewBox="0 0 256 228"><path fill="#00D8FF" d="M210.483 73.824a171.49 171.49 0 0 0-8.24-2.597c.465-1.9.893-3.777 1.273-5.621c6.238-30.281 2.16-54.676-11.769-62.708c-13.355-7.7-35.196.329-57.254 19.526a171.23 171.23 0 0 0-6.375 5.848a155.866 155.866 0 0 0-4.241-3.917C100.759 3.829 77.587-4.822 63.673 3.233C50.33 10.957 46.379 33.89 51.995 62.588a170.974 170.974 0 0 0 1.892 8.48c-3.28.932-6.445 1.924-9.474 2.98C17.309 83.498 0 98.307 0 113.668c0 15.865 18.582 31.778 46.812 41.427a145.52 145.52 0 0 0 6.921 2.165a167.467 167.467 0 0 0-2.01 9.138c-5.354 28.2-1.173 50.591 12.134 58.266c13.744 7.926 36.812-.22 59.273-19.855a145.567 145.567 0 0 0 5.342-4.923a168.064 168.064 0 0 0 6.92 6.314c21.758 18.722 43.246 26.282 56.54 18.586c13.731-7.949 18.194-32.003 12.4-61.268a145.016 145.016 0 0 0-1.535-6.842c1.62-.48 3.21-.974 4.76-1.488c29.348-9.723 48.443-25.443 48.443-41.52c0-15.417-17.868-30.326-45.517-39.844Zm-6.365 70.984c-1.4.463-2.836.91-4.3 1.345c-3.24-10.257-7.612-21.163-12.963-32.432c5.106-11 9.31-21.767 12.459-31.957c2.619.758 5.16 1.557 7.61 2.4c23.69 8.156 38.14 20.213 38.14 29.504c0 9.896-15.606 22.743-40.946 31.14Zm-10.514 20.834c2.562 12.94 2.927 24.64 1.23 33.787c-1.524 8.219-4.59 13.698-8.382 15.893c-8.067 4.67-25.32-1.4-43.927-17.412a156.726 156.726 0 0 1-6.437-5.87c7.214-7.889 14.423-17.06 21.459-27.246c12.376-1.098 24.068-2.894 34.671-5.345a134.17 134.17 0 0 1 1.386 6.193ZM87.276 214.515c-7.882 2.783-14.16 2.863-17.955.675c-8.075-4.657-11.432-22.636-6.853-46.752a156.923 156.923 0 0 1 1.869-8.499c10.486 2.32 22.093 3.988 34.498 4.994c7.084 9.967 14.501 19.128 21.976 27.15a134.668 134.668 0 0 1-4.877 4.492c-9.933 8.682-19.886 14.842-28.658 17.94ZM50.35 144.747c-12.483-4.267-22.792-9.812-29.858-15.863c-6.35-5.437-9.555-10.836-9.555-15.216c0-9.322 13.897-21.212 37.076-29.293c2.813-.98 5.757-1.905 8.812-2.773c3.204 10.42 7.406 21.315 12.477 32.332c-5.137 11.18-9.399 22.249-12.634 32.792a134.718 134.718 0 0 1-6.318-1.979Zm12.378-84.26c-4.811-24.587-1.616-43.134 6.425-47.789c8.564-4.958 27.502 2.111 47.463 19.835a144.318 144.318 0 0 1 3.841 3.545c-7.438 7.987-14.787 17.08-21.808 26.988c-12.04 1.116-23.565 2.908-34.161 5.309a160.342 160.342 0 0 1-1.76-7.887Zm110.427 27.268a347.8 347.8 0 0 0-7.785-12.803c8.168 1.033 15.994 2.404 23.343 4.08c-2.206 7.072-4.956 14.465-8.193 22.045a381.151 381.151 0 0 0-7.365-13.322Zm-45.032-43.861c5.044 5.465 10.096 11.566 15.065 18.186a322.04 322.04 0 0 0-30.257-.006c4.974-6.559 10.069-12.652 15.192-18.18ZM82.802 87.83a323.167 323.167 0 0 0-7.227 13.238c-3.184-7.553-5.909-14.98-8.134-22.152c7.304-1.634 15.093-2.97 23.209-3.984a321.524 321.524 0 0 0-7.848 12.897Zm8.081 65.352c-8.385-.936-16.291-2.203-23.593-3.793c2.26-7.3 5.045-14.885 8.298-22.6a321.187 321.187 0 0 0 7.257 13.246c2.594 4.48 5.28 8.868 8.038 13.147Zm37.542 31.03c-5.184-5.592-10.354-11.779-15.403-18.433c4.902.192 9.899.29 14.978.29c5.218 0 10.376-.117 15.453-.343c-4.985 6.774-10.018 12.97-15.028 18.486Zm52.198-57.817c3.422 7.8 6.306 15.345 8.596 22.52c-7.422 1.694-15.436 3.058-23.88 4.071a382.417 382.417 0 0 0 7.859-13.026a347.403 347.403 0 0 0 7.425-13.565Zm-16.898 8.101a358.557 358.557 0 0 1-12.281 19.815a329.4 329.4 0 0 1-23.444.823c-7.967 0-15.716-.248-23.178-.732a310.202 310.202 0 0 1-12.513-19.846h.001a307.41 307.41 0 0 1-10.923-20.627a310.278 310.278 0 0 1 10.89-20.637l-.001.001a307.318 307.318 0 0 1 12.413-19.761c7.613-.576 15.42-.876 23.31-.876H128c7.926 0 15.743.303 23.354.883a329.357 329.357 0 0 1 12.335 19.695a358.489 358.489 0 0 1 11.036 20.54a329.472 329.472 0 0 1-11 20.722Zm22.56-122.124c8.572 4.944 11.906 24.881 6.52 51.026c-.344 1.668-.73 3.367-1.15 5.09c-10.622-2.452-22.155-4.275-34.23-5.408c-7.034-10.017-14.323-19.124-21.64-27.008a160.789 160.789 0 0 1 5.888-5.4c18.9-16.447 36.564-22.941 44.612-18.3ZM128 90.808c12.625 0 22.86 10.235 22.86 22.86s-10.235 22.86-22.86 22.86s-22.86-10.235-22.86-22.86s10.235-22.86 22.86-22.86Z"></path></svg>
-
 ────────────────── fleet-management-frontend/index.html ──────────────────
 <!doctype html>
 <html lang="en">
@@ -6939,7 +6884,393 @@ SELECT
 -- ============================================
 
 ────────────────── database/triggers.sql ──────────────────
+-- ============================================
+-- TRIGGERS ET FONCTIONS AUTOMATIQUES
+-- FLEET MANAGEMENT SYSTEM
+-- ============================================
 
+-- ============================================
+-- FONCTION: Générer numéro de demande unique
+-- ============================================
+CREATE OR REPLACE FUNCTION generer_numero_demande(prefix VARCHAR)
+RETURNS VARCHAR AS $$
+DECLARE
+    nouveau_numero VARCHAR;
+    compteur INTEGER;
+    annee VARCHAR;
+BEGIN
+    annee := TO_CHAR(CURRENT_DATE, 'YYYY');
+    
+    SELECT COUNT(*) + 1 INTO compteur
+    FROM (
+        SELECT numero_demande FROM demandes_carburant WHERE numero_demande LIKE prefix || annee || '%'
+        UNION ALL
+        SELECT numero_demande FROM demandes_voiture WHERE numero_demande LIKE prefix || annee || '%'
+    ) AS demandes;
+    
+    nouveau_numero := prefix || annee || LPAD(compteur::TEXT, 6, '0');
+    RETURN nouveau_numero;
+END;
+$$ LANGUAGE plpgsql;
+
+-- ============================================
+-- TRIGGER: Auto-génération numéro demande carburant
+-- ============================================
+CREATE OR REPLACE FUNCTION trigger_numero_demande_carburant()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.numero_demande IS NULL OR NEW.numero_demande = '' THEN
+        NEW.numero_demande := generer_numero_demande('CARB-');
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS auto_numero_demande_carburant ON demandes_carburant;
+CREATE TRIGGER auto_numero_demande_carburant
+    BEFORE INSERT ON demandes_carburant
+    FOR EACH ROW
+    EXECUTE FUNCTION trigger_numero_demande_carburant();
+
+-- ============================================
+-- TRIGGER: Auto-génération numéro demande voiture
+-- ============================================
+CREATE OR REPLACE FUNCTION trigger_numero_demande_voiture()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.numero_demande IS NULL OR NEW.numero_demande = '' THEN
+        NEW.numero_demande := generer_numero_demande('VEH-');
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS auto_numero_demande_voiture ON demandes_voiture;
+CREATE TRIGGER auto_numero_demande_voiture
+    BEFORE INSERT ON demandes_voiture
+    FOR EACH ROW
+    EXECUTE FUNCTION trigger_numero_demande_voiture();
+
+-- ============================================
+-- TRIGGER: Mise à jour statut véhicule lors d'affectation
+-- ============================================
+CREATE OR REPLACE FUNCTION trigger_statut_vehicule_affectation()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF TG_OP = 'INSERT' OR (TG_OP = 'UPDATE' AND NEW.actif = true) THEN
+        UPDATE vehicules 
+        SET statut = 'en_mission'
+        WHERE id = NEW.vehicule_id AND statut = 'disponible';
+    ELSIF TG_OP = 'DELETE' OR (TG_OP = 'UPDATE' AND NEW.actif = false) THEN
+        UPDATE vehicules 
+        SET statut = 'disponible'
+        WHERE id = COALESCE(NEW.vehicule_id, OLD.vehicule_id);
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS update_statut_vehicule_affectation ON affectations;
+CREATE TRIGGER update_statut_vehicule_affectation
+    AFTER INSERT OR UPDATE OR DELETE ON affectations
+    FOR EACH ROW
+    EXECUTE FUNCTION trigger_statut_vehicule_affectation();
+
+-- ============================================
+-- TRIGGER: Calcul consommation carburant
+-- ============================================
+CREATE OR REPLACE FUNCTION trigger_calcul_consommation()
+RETURNS TRIGGER AS $$
+DECLARE
+    km_precedent INTEGER;
+    distance INTEGER;
+BEGIN
+    IF NEW.kilometrage IS NOT NULL THEN
+        SELECT kilometrage INTO km_precedent
+        FROM suivis_carburant
+        WHERE vehicule_id = NEW.vehicule_id 
+        AND id < NEW.id
+        AND kilometrage IS NOT NULL
+        ORDER BY date_ravitaillement DESC
+        LIMIT 1;
+        
+        IF km_precedent IS NOT NULL AND km_precedent > 0 THEN
+            distance := NEW.kilometrage - km_precedent;
+            IF distance > 0 AND NEW.quantite > 0 THEN
+                NEW.consommation_theorique := (NEW.quantite / distance) * 100;
+            END IF;
+        END IF;
+    END IF;
+    
+    IF NEW.prix_unitaire IS NOT NULL AND NEW.quantite IS NOT NULL THEN
+        NEW.montant_total := NEW.prix_unitaire * NEW.quantite;
+    END IF;
+    
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS calcul_consommation ON suivis_carburant;
+CREATE TRIGGER calcul_consommation
+    BEFORE INSERT OR UPDATE ON suivis_carburant
+    FOR EACH ROW
+    EXECUTE FUNCTION trigger_calcul_consommation();
+
+-- ============================================
+-- TRIGGER: Mise à jour kilométrage véhicule
+-- ============================================
+CREATE OR REPLACE FUNCTION trigger_update_kilometrage_vehicule()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.kilometrage IS NOT NULL THEN
+        UPDATE vehicules 
+        SET kilometrage = GREATEST(kilometrage, NEW.kilometrage)
+        WHERE id = NEW.vehicule_id;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS update_kilometrage_vehicule ON suivis_carburant;
+CREATE TRIGGER update_kilometrage_vehicule
+    AFTER INSERT OR UPDATE ON suivis_carburant
+    FOR EACH ROW
+    EXECUTE FUNCTION trigger_update_kilometrage_vehicule();
+
+-- ============================================
+-- TRIGGER: Validation permis chauffeur
+-- ============================================
+CREATE OR REPLACE FUNCTION trigger_validation_permis()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.date_expiration_permis < CURRENT_DATE THEN
+        NEW.disponible := false;
+        RAISE NOTICE 'Permis expiré pour le chauffeur %', NEW.id;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS validation_permis_chauffeur ON chauffeurs;
+CREATE TRIGGER validation_permis_chauffeur
+    BEFORE INSERT OR UPDATE ON chauffeurs
+    FOR EACH ROW
+    EXECUTE FUNCTION trigger_validation_permis();
+
+-- ============================================
+-- TRIGGER: Historique changements entretien
+-- ============================================
+CREATE OR REPLACE FUNCTION trigger_log_entretien()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF TG_OP = 'INSERT' THEN
+        INSERT INTO historique_entretiens (entretien_id, action, details)
+        VALUES (NEW.id, 'CREATION', 'Entretien créé: ' || NEW.type_entretien);
+    ELSIF TG_OP = 'UPDATE' THEN
+        IF OLD.statut != NEW.statut THEN
+            INSERT INTO historique_entretiens (entretien_id, action, details)
+            VALUES (NEW.id, 'CHANGEMENT_STATUT', 
+                    'Statut modifié: ' || OLD.statut || ' → ' || NEW.statut);
+        END IF;
+        
+        IF OLD.date_fin IS NULL AND NEW.date_fin IS NOT NULL THEN
+            INSERT INTO historique_entretiens (entretien_id, action, details)
+            VALUES (NEW.id, 'CLOTURE', 'Entretien terminé le ' || NEW.date_fin);
+        END IF;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS log_historique_entretien ON entretiens;
+CREATE TRIGGER log_historique_entretien
+    AFTER INSERT OR UPDATE ON entretiens
+    FOR EACH ROW
+    EXECUTE FUNCTION trigger_log_entretien();
+
+-- ============================================
+-- TRIGGER: Mise à jour dernière connexion
+-- ============================================
+CREATE OR REPLACE FUNCTION trigger_update_derniere_connexion()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.derniere_connexion := CURRENT_TIMESTAMP;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS update_derniere_connexion ON utilisateurs;
+CREATE TRIGGER update_derniere_connexion
+    BEFORE UPDATE ON utilisateurs
+    FOR EACH ROW
+    WHEN (OLD.derniere_connexion IS DISTINCT FROM NEW.derniere_connexion)
+    EXECUTE FUNCTION trigger_update_derniere_connexion();
+
+-- ============================================
+-- TRIGGER: Validation dates demande voiture
+-- ============================================
+CREATE OR REPLACE FUNCTION trigger_validation_demande_voiture()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.date_debut < CURRENT_TIMESTAMP - INTERVAL '1 day' THEN
+        RAISE EXCEPTION 'La date de début ne peut pas être dans le passé (plus de 24h)';
+    END IF;
+    
+    IF NEW.date_fin <= NEW.date_debut THEN
+        RAISE EXCEPTION 'La date de fin doit être postérieure à la date de début';
+    END IF;
+    
+    IF NEW.vehicule_id IS NOT NULL THEN
+        IF EXISTS (
+            SELECT 1 FROM demandes_voiture
+            WHERE vehicule_id = NEW.vehicule_id
+            AND statut IN ('approuvee', 'en_cours')
+            AND id != COALESCE(NEW.id, 0)
+            AND (
+                (NEW.date_debut BETWEEN date_debut AND date_fin)
+                OR (NEW.date_fin BETWEEN date_debut AND date_fin)
+                OR (date_debut BETWEEN NEW.date_debut AND NEW.date_fin)
+            )
+        ) THEN
+            RAISE EXCEPTION 'Le véhicule est déjà réservé pour cette période';
+        END IF;
+    END IF;
+    
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS validation_demande_voiture ON demandes_voiture;
+CREATE TRIGGER validation_demande_voiture
+    BEFORE INSERT OR UPDATE ON demandes_voiture
+    FOR EACH ROW
+    EXECUTE FUNCTION trigger_validation_demande_voiture();
+
+-- ============================================
+-- TRIGGER: Auto-création suivi carburant
+-- ============================================
+CREATE OR REPLACE FUNCTION trigger_auto_suivi_carburant()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.statut = 'approuvee' AND OLD.statut != 'approuvee' THEN
+        INSERT INTO suivis_carburant (
+            vehicule_id,
+            demande_carburant_id,
+            quantite,
+            type_carburant,
+            kilometrage,
+            date_ravitaillement,
+            bon_commande
+        ) VALUES (
+            NEW.vehicule_id,
+            NEW.id,
+            COALESCE(NEW.quantite_approuvee, NEW.quantite_demandee),
+            NEW.type_carburant,
+            NEW.kilometrage_actuel,
+            CURRENT_TIMESTAMP,
+            NEW.bon_commande
+        );
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS auto_suivi_carburant ON demandes_carburant;
+CREATE TRIGGER auto_suivi_carburant
+    AFTER UPDATE ON demandes_carburant
+    FOR EACH ROW
+    EXECUTE FUNCTION trigger_auto_suivi_carburant();
+
+-- ============================================
+-- TRIGGER: Mise à jour compteur missions chauffeur
+-- ============================================
+CREATE OR REPLACE FUNCTION trigger_update_missions_chauffeur()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF TG_OP = 'INSERT' OR (TG_OP = 'UPDATE' AND NEW.statut = 'terminee' AND OLD.statut != 'terminee') THEN
+        UPDATE chauffeurs
+        SET nombre_missions = nombre_missions + 1
+        WHERE id = NEW.chauffeur_id;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS update_missions_chauffeur ON demandes_voiture;
+CREATE TRIGGER update_missions_chauffeur
+    AFTER INSERT OR UPDATE ON demandes_voiture
+    FOR EACH ROW
+    WHEN (NEW.chauffeur_id IS NOT NULL AND NEW.statut = 'terminee')
+    EXECUTE FUNCTION trigger_update_missions_chauffeur();
+
+-- ============================================
+-- FONCTION: Vérifier disponibilité véhicule
+-- ============================================
+CREATE OR REPLACE FUNCTION verifier_disponibilite_vehicule(
+    p_vehicule_id INTEGER,
+    p_date_debut TIMESTAMP,
+    p_date_fin TIMESTAMP,
+    p_demande_id INTEGER DEFAULT NULL
+)
+RETURNS BOOLEAN AS $$
+BEGIN
+    RETURN NOT EXISTS (
+        SELECT 1 FROM demandes_voiture
+        WHERE vehicule_id = p_vehicule_id
+        AND statut IN ('approuvee', 'en_cours')
+        AND id != COALESCE(p_demande_id, 0)
+        AND (
+            (p_date_debut BETWEEN date_debut AND date_fin)
+            OR (p_date_fin BETWEEN date_debut AND date_fin)
+            OR (date_debut BETWEEN p_date_debut AND p_date_fin)
+        )
+    );
+END;
+$$ LANGUAGE plpgsql;
+
+-- ============================================
+-- FONCTION: Calculer consommation moyenne
+-- ============================================
+CREATE OR REPLACE FUNCTION calculer_consommation_moyenne(p_vehicule_id INTEGER)
+RETURNS DECIMAL AS $$
+DECLARE
+    consommation_moy DECIMAL;
+BEGIN
+    SELECT AVG(consommation_theorique) INTO consommation_moy
+    FROM suivis_carburant
+    WHERE vehicule_id = p_vehicule_id
+    AND consommation_theorique IS NOT NULL
+    AND consommation_theorique > 0
+    AND consommation_theorique < 50;
+    
+    RETURN COALESCE(consommation_moy, 0);
+END;
+$$ LANGUAGE plpgsql;
+
+-- ============================================
+-- VÉRIFICATION DES TRIGGERS
+-- ============================================
+
+-- Afficher tous les triggers créés
+DO $$
+BEGIN
+    RAISE NOTICE '==========================================';
+    RAISE NOTICE 'TRIGGERS CRÉÉS';
+    RAISE NOTICE '==========================================';
+END $$;
+
+SELECT 
+    trigger_name,
+    event_object_table as table_name,
+    action_timing || ' ' || string_agg(event_manipulation, ' OR ') as trigger_event
+FROM information_schema.triggers
+WHERE trigger_schema = 'public'
+GROUP BY trigger_name, event_object_table, action_timing
+ORDER BY event_object_table, trigger_name;
+
+-- ============================================
+-- FIN DES TRIGGERS
+-- ============================================
 
 ────────────────── database/shema.sql ──────────────────
 -- ============================================
@@ -10611,15 +10942,15 @@ const chauffeursRoutes = require('./routes/chauffeurs');
 const importRoutes = require('./routes/import');
 const pdfRoutes = require('./routes/pdf');
 
-// Montage des routes
+// Montage des routes SANS authentification pour le développement
 app.use('/api', demandesRoutes);
 app.use('/api', vehiculesRoutes);
 app.use('/api', chauffeursRoutes);
 app.use('/api', importRoutes);
 app.use('/api', pdfRoutes);
 
-// Route de suivi carburant
-app.get('/api/suivis', require('./middleware/auth').authentifier, async (req, res) => {
+// Route de suivi carburant SANS authentification
+app.get('/api/suivis', async (req, res) => {
   try {
     const pool = require('./config/database');
     const { type_suivi, statut, date_debut, date_fin, immatriculation } = req.query;
@@ -10663,8 +10994,8 @@ app.get('/api/suivis', require('./middleware/auth').authentifier, async (req, re
   }
 });
 
-// Route stats globales
-app.get('/api/stats', require('./middleware/auth').authentifier, async (req, res) => {
+// Route stats globales SANS authentification
+app.get('/api/stats', async (req, res) => {
   try {
     const pool = require('./config/database');
     
@@ -10717,8 +11048,8 @@ app.get('/api/stats', require('./middleware/auth').authentifier, async (req, res
   }
 });
 
-// Route alertes
-app.get('/api/alertes', require('./middleware/auth').authentifier, async (req, res) => {
+// Route alertes SANS authentification
+app.get('/api/alertes', async (req, res) => {
   try {
     const pool = require('./config/database');
     
@@ -10835,6 +11166,7 @@ app.listen(PORT, () => {
 ║   Port: ${PORT}                              ║
 ║   Env:  ${process.env.NODE_ENV || 'development'}                  ║
 ║   URL:  http://localhost:${PORT}             ║
+║   Auth: ❌ DÉSACTIVÉE (DEV MODE)            ║
 ╚═══════════════════════════════════════════╝
   `);
   
@@ -10858,7 +11190,9 @@ app.listen(PORT, () => {
   console.log('   POST /api/import-excel');
   console.log('   GET  /api/stats');
   console.log('   GET  /api/suivis');
+  console.log('   GET  /api/alertes');
   console.log('');
+  console.log('⚠️  MODE DÉVELOPPEMENT - Authentification désactivée');
   console.log('✨ Serveur prêt à recevoir des requêtes!');
 });
 
@@ -10875,370 +11209,464 @@ process.on('SIGINT', () => {
 
 module.exports = app;
 
-────────────────── fleet-management-backend/src/routes/vehicules.js ──────────────────
-// fleet-management-backend/src/routes/vehicules.js
+────────────────── fleet-management-backend/src/routes/import.js ──────────────────
+// fleet-management-backend/src/routes/import.js - VERSION AMÉLIORÉE
 const express = require('express');
 const router = express.Router();
+const multer = require('multer');
+const XLSX = require('xlsx');
+const { v4: uuidv4 } = require('uuid');
 const pool = require('../config/database');
-const { authentifier, verifierRole } = require('../middleware/auth');
 
-// ============================================
-// GESTION DES VÉHICULES
-// ============================================
+// Auth désactivée pour DEV
+const authentifier = (req, res, next) => { 
+  req.user = { id: 1, role: 'admin', email: 'admin@prirtem.mg' }; 
+  next(); 
+};
+const verifierRole = (...roles) => (req, res, next) => next();
 
-// Récupérer tous les véhicules
-router.get('/vehicules', authentifier, async (req, res) => {
-  try {
-    const { statut, type_vehicule } = req.query;
-    
-    let query = 'SELECT * FROM vehicules WHERE 1=1';
-    const params = [];
-    let paramCount = 1;
-    
-    if (statut) {
-      query += ` AND statut = $${paramCount++}`;
-      params.push(statut);
+// Configuration Multer
+const storage = multer.memoryStorage();
+const upload = multer({ 
+  storage: storage,
+  limits: { fileSize: 10 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
+        file.mimetype === 'application/vnd.ms-excel') {
+      cb(null, true);
+    } else {
+      cb(new Error('Seuls les fichiers Excel (.xlsx, .xls) sont autorisés'));
     }
-    
-    if (type_vehicule) {
-      query += ` AND type_vehicule = $${paramCount++}`;
-      params.push(type_vehicule);
-    }
-    
-    query += ' ORDER BY immatriculation';
-    
-    const result = await pool.query(query, params);
-    res.json({ success: true, data: result.rows, count: result.rows.length });
-  } catch (error) {
-    console.error('Erreur récupération véhicules:', error);
-    res.status(500).json({ error: error.message });
   }
 });
 
-// Récupérer un véhicule spécifique
-router.get('/vehicules/:id', authentifier, async (req, res) => {
-  try {
-    const { id } = req.params;
-    
-    const result = await pool.query(`
-      SELECT 
-        v.*,
-        COUNT(DISTINCT m.id) as nombre_missions,
-        SUM(m.km_parcourus) as total_km_missions,
-        AVG(sc.consommation_aux_100) as consommation_moyenne
-      FROM vehicules v
-      LEFT JOIN missions m ON v.id = m.vehicule_id AND m.statut = 'terminee'
-      LEFT JOIN suivi_carburant sc ON v.immatriculation = sc.immatriculation
-      WHERE v.id = $1
-      GROUP BY v.id
-    `, [id]);
-    
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Véhicule non trouvé' });
-    }
-    
-    res.json({ success: true, data: result.rows[0] });
-  } catch (error) {
-    console.error('Erreur récupération véhicule:', error);
-    res.status(500).json({ error: error.message });
+// ============================================
+// DÉTECTION AUTOMATIQUE DU TYPE DE FEUILLE
+// ============================================
+function detecterTypeFeuille(data, nomFeuille) {
+  const nomFeuilleNorm = nomFeuille.toLowerCase();
+  const colonnes = Object.keys(data[0] || {}).map(c => c.toLowerCase());
+  
+  // Détection par nom de feuille
+  if (nomFeuilleNorm.includes('groupe') && nomFeuilleNorm.includes('electro')) {
+    return 'groupe_electrogene';
   }
-});
+  if (nomFeuilleNorm.includes('suivi') && nomFeuilleNorm.includes('carburant')) {
+    return 'suivi_carburant';
+  }
+  if (nomFeuilleNorm.includes('autres') && nomFeuilleNorm.includes('carburant')) {
+    return 'autres_carburants';
+  }
+  
+  // Détection par colonnes spécifiques
+  const hasImmatriculation = colonnes.some(c => c.includes('immat'));
+  const hasKmDepart = colonnes.some(c => c.includes('km') && (c.includes('depart') || c.includes('début')));
+  const hasNumeroGroupe = colonnes.some(c => (c.includes('numero') || c.includes('numéro')) && c.includes('groupe'));
+  const hasHeuresFonctionnement = colonnes.some(c => c.includes('heure') && c.includes('fonction'));
+  
+  if (hasNumeroGroupe || hasHeuresFonctionnement) {
+    return 'groupe_electrogene';
+  }
+  if (hasImmatriculation && hasKmDepart) {
+    return 'suivi_carburant';
+  }
+  
+  return 'suivi_carburant'; // Par défaut
+}
 
-// Créer un nouveau véhicule
-router.post('/vehicules', 
-  authentifier, 
-  verifierRole('logistique', 'admin'), 
-  async (req, res) => {
-    try {
-      const {
-        immatriculation, marque, modele, annee, type_vehicule,
-        type_carburant, capacite_reservoir, couleur, numero_chassis,
-        date_acquisition
-      } = req.body;
-      
-      // Validation
-      if (!immatriculation || !marque || !modele) {
-        return res.status(400).json({ 
-          error: 'Champs requis manquants',
-          required: ['immatriculation', 'marque', 'modele']
-        });
-      }
-      
-      const result = await pool.query(`
-        INSERT INTO vehicules (
-          immatriculation, marque, modele, annee, type_vehicule,
-          type_carburant, capacite_reservoir, couleur, numero_chassis,
-          date_acquisition, statut
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'disponible')
-        RETURNING *
-      `, [
-        immatriculation.toUpperCase(), marque, modele, annee || null, 
-        type_vehicule || 'voiture', type_carburant || 'essence',
-        capacite_reservoir || null, couleur || null, numero_chassis || null,
-        date_acquisition || null
-      ]);
-      
-      res.status(201).json({ 
-        success: true, 
-        message: 'Véhicule créé avec succès',
-        vehicule: result.rows[0] 
-      });
-    } catch (error) {
-      if (error.code === '23505') { // Duplicate key
-        return res.status(409).json({ 
-          error: 'Cette immatriculation existe déjà' 
-        });
-      }
-      console.error('Erreur création véhicule:', error);
-      res.status(500).json({ error: error.message });
-    }
-});
+function normaliserColonne(nom) {
+  const mapping = {
+    'date': 'date_operation',
+    'immat': 'immatriculation',
+    'immatriculation': 'immatriculation',
+    'montant': 'montant',
+    'prix': 'prix_unitaire',
+    'prix unitaire': 'prix_unitaire',
+    'litre': 'quantite_litres',
+    'litres': 'quantite_litres',
+    'quantite': 'quantite_litres',
+    'quantité': 'quantite_litres',
+    'km départ': 'km_depart',
+    'km_depart': 'km_depart',
+    'km de départ': 'km_depart',
+    'km début': 'km_depart',
+    'km arrivée': 'km_arrivee',
+    'km_arrivee': 'km_arrivee',
+    'km d\'arrivée': 'km_arrivee',
+    'km fin': 'km_arrivee',
+    'km journalier': 'km_journalier',
+    'km_journalier': 'km_journalier',
+    'km du jour': 'km_journalier',
+    'compteur': 'compteur_actuel',
+    'compteur actuel': 'compteur_actuel',
+    'compteur précédent': 'compteur_precedent',
+    'compteur precedent': 'compteur_precedent',
+    'consommation': 'consommation_aux_100',
+    'carburant': 'type_carburant',
+    'type carburant': 'type_carburant',
+    'marque': 'marque',
+    'modele': 'modele',
+    'modèle': 'modele',
+    'commentaire': 'commentaire',
+    'observation': 'commentaire',
+    'numero groupe': 'numero_equipement',
+    'numéro groupe': 'numero_equipement',
+    'numero equipement': 'numero_equipement',
+    'heures fonctionnement': 'heures_fonctionnement'
+  };
+  
+  const nomNormalise = nom.toLowerCase().trim();
+  return mapping[nomNormalise] || nomNormalise.replace(/\s+/g, '_');
+}
 
-// Modifier un véhicule
-router.put('/vehicules/:id', 
-  authentifier, 
-  verifierRole('logistique', 'admin'), 
-  async (req, res) => {
-    try {
-      const { id } = req.params;
-      const updates = req.body;
-      
-      // Champs autorisés à être modifiés
-      const champsAutorises = [
-        'marque', 'modele', 'annee', 'type_vehicule', 'type_carburant',
-        'capacite_reservoir', 'couleur', 'numero_chassis', 'statut',
-        'km_actuel', 'photo_url'
-      ];
-      
-      const setClauses = [];
-      const values = [];
-      let paramCount = 1;
-      
-      Object.keys(updates).forEach(key => {
-        if (champsAutorises.includes(key)) {
-          setClauses.push(`${key} = $${paramCount++}`);
-          values.push(updates[key]);
+function normaliserDonnees(ligneExcel, typeFichier) {
+  const donneeNormalisee = {
+    type_suivi: typeFichier,
+    donnees_brutes: JSON.stringify(ligneExcel)
+  };
+  
+  for (const [cle, valeur] of Object.entries(ligneExcel)) {
+    if (valeur === null || valeur === undefined || valeur === '') continue;
+    
+    const colonneNormalisee = normaliserColonne(cle);
+    
+    // Conversion des dates Excel
+    if (colonneNormalisee === 'date_operation') {
+      if (typeof valeur === 'number') {
+        const date = XLSX.SSF.parse_date_code(valeur);
+        donneeNormalisee.date_operation = new Date(date.y, date.m - 1, date.d);
+      } else if (valeur instanceof Date) {
+        donneeNormalisee.date_operation = valeur;
+      } else {
+        const parsed = new Date(valeur);
+        if (!isNaN(parsed)) {
+          donneeNormalisee.date_operation = parsed;
         }
-      });
-      
-      if (setClauses.length === 0) {
-        return res.status(400).json({ 
-          error: 'Aucun champ valide à mettre à jour',
-          champsAutorises 
-        });
       }
-      
-      values.push(id);
-      
-      const result = await pool.query(`
-        UPDATE vehicules 
-        SET ${setClauses.join(', ')}, updated_at = CURRENT_TIMESTAMP
-        WHERE id = $${paramCount}
-        RETURNING *
-      `, values);
-      
-      if (result.rows.length === 0) {
-        return res.status(404).json({ error: 'Véhicule non trouvé' });
-      }
-      
-      res.json({ 
-        success: true, 
-        message: 'Véhicule modifié avec succès',
-        vehicule: result.rows[0] 
-      });
-    } catch (error) {
-      console.error('Erreur modification véhicule:', error);
-      res.status(500).json({ error: error.message });
     }
-});
+    // Conversion des nombres
+    else if (['montant', 'prix_unitaire', 'quantite_litres', 'km_depart', 
+              'km_arrivee', 'km_journalier', 'compteur_actuel', 'compteur_precedent',
+              'heures_fonctionnement'].includes(colonneNormalisee)) {
+      const nombre = parseFloat(String(valeur).replace(/[^0-9.-]/g, ''));
+      if (!isNaN(nombre)) {
+        donneeNormalisee[colonneNormalisee] = nombre;
+      }
+    }
+    else {
+      donneeNormalisee[colonneNormalisee] = String(valeur).trim();
+    }
+  }
+  
+  return donneeNormalisee;
+}
 
-// Supprimer un véhicule
-router.delete('/vehicules/:id', 
+function validerEtCalculer(donnee) {
+  const erreurs = [];
+  
+  // Calcul km_entre_repleins
+  if (donnee.compteur_actuel && donnee.compteur_precedent) {
+    donnee.km_entre_repleins = donnee.compteur_actuel - donnee.compteur_precedent;
+    
+    if (donnee.km_entre_repleins < 0) {
+      erreurs.push('KM entre repleins négatif');
+    }
+  }
+  
+  // Calcul km_arrivee si manquant
+  if (!donnee.km_arrivee && donnee.km_depart && donnee.km_journalier) {
+    donnee.km_arrivee = donnee.km_depart + donnee.km_journalier;
+  }
+  
+  // Calcul de la consommation
+  if (donnee.quantite_litres && donnee.km_entre_repleins && donnee.km_entre_repleins > 0) {
+    donnee.consommation_aux_100 = (donnee.quantite_litres / donnee.km_entre_repleins) * 100;
+  }
+  
+  // Détermination replein
+  if (donnee.montant) {
+    donnee.est_replein = donnee.montant >= 200000;
+  }
+  
+  // Validations
+  if (donnee.km_journalier && donnee.km_journalier >= 120) {
+    erreurs.push('KM journalier >= 120 (limite dépassée)');
+  }
+  
+  if (donnee.consommation_aux_100) {
+    if (donnee.consommation_aux_100 < 15) {
+      erreurs.push(`Consommation ${donnee.consommation_aux_100.toFixed(2)} L/100km < 15`);
+    }
+    if (donnee.consommation_aux_100 >= 16) {
+      erreurs.push(`Consommation ${donnee.consommation_aux_100.toFixed(2)} L/100km >= 16`);
+    }
+  }
+  
+  if (!donnee.date_operation) {
+    donnee.date_operation = new Date();
+  }
+  
+  return { donnee, erreurs };
+}
+
+// ============================================
+// ENDPOINT IMPORT EXCEL AMÉLIORÉ
+// ============================================
+
+router.post('/import-excel', 
   authentifier, 
-  verifierRole('admin'), 
+  verifierRole('logistique', 'admin'),
+  upload.single('fichier'), 
   async (req, res) => {
     const client = await pool.connect();
+    
     try {
-      const { id } = req.params;
+      if (!req.file) {
+        return res.status(400).json({ 
+          error: 'Aucun fichier fourni',
+          message: 'Veuillez sélectionner un fichier Excel' 
+        });
+      }
+      
+      const buffer = req.file.buffer;
+      const nomFichier = req.file.originalname;
+      const batchId = uuidv4();
+      
+      console.log(`\n${'='.repeat(60)}`);
+      console.log(`Début import: ${nomFichier}`);
+      console.log(`Batch ID: ${batchId}`);
+      console.log(`${'='.repeat(60)}\n`);
+      
+      // Lecture du fichier Excel - TOUTES LES FEUILLES
+      const workbook = XLSX.read(buffer, { 
+        type: 'buffer', 
+        cellDates: true,
+        dateNF: 'dd/mm/yyyy'
+      });
+      
+      console.log(`📊 Feuilles trouvées: ${workbook.SheetNames.join(', ')}\n`);
       
       await client.query('BEGIN');
       
-      // Vérifier si le véhicule a des missions en cours
-      const missionsEnCours = await client.query(
-        'SELECT id FROM missions WHERE vehicule_id = $1 AND statut = $2',
-        [id, 'en_cours']
-      );
+      const resultatGlobal = {
+        succes: 0,
+        erreurs: 0,
+        avertissements: 0,
+        details: [],
+        parFeuille: {}
+      };
       
-      if (missionsEnCours.rows.length > 0) {
-        await client.query('ROLLBACK');
-        return res.status(400).json({ 
-          error: 'Impossible de supprimer un véhicule avec des missions en cours' 
-        });
+      // PARCOURIR TOUTES LES FEUILLES
+      for (const nomFeuille of workbook.SheetNames) {
+        console.log(`\n📄 Traitement de la feuille: "${nomFeuille}"`);
+        
+        const feuille = workbook.Sheets[nomFeuille];
+        const donnees = XLSX.utils.sheet_to_json(feuille);
+        
+        if (donnees.length === 0) {
+          console.log(`⚠️  Feuille vide, ignorée\n`);
+          continue;
+        }
+        
+        // Détection du type pour cette feuille
+        const typeFichier = detecterTypeFeuille(donnees, nomFeuille);
+        console.log(`🔍 Type détecté: ${typeFichier}`);
+        console.log(`📊 Nombre de lignes: ${donnees.length}\n`);
+        
+        resultatGlobal.parFeuille[nomFeuille] = {
+          type: typeFichier,
+          lignes: donnees.length,
+          succes: 0,
+          erreurs: 0,
+          avertissements: 0
+        };
+        
+        // Traiter chaque ligne de cette feuille
+        for (let i = 0; i < donnees.length; i++) {
+          const ligneExcel = donnees[i];
+          
+          try {
+            // Normalisation
+            let donneeNormalisee = normaliserDonnees(ligneExcel, typeFichier);
+            
+            // Validation et calculs
+            const { donnee, erreurs } = validerEtCalculer(donneeNormalisee);
+            donneeNormalisee = donnee;
+            donneeNormalisee.import_batch_id = batchId;
+            donneeNormalisee.nom_feuille = nomFeuille;
+            
+            // Insertion en base
+            const query = `
+              INSERT INTO suivi_carburant (
+                type_suivi, date_operation, immatriculation, numero_equipement,
+                marque, modele, montant, prix_unitaire, quantite_litres,
+                type_carburant, km_depart, km_arrivee, km_journalier,
+                compteur_actuel, compteur_precedent, km_entre_repleins,
+                consommation_aux_100, est_replein, commentaire,
+                donnees_brutes, import_batch_id
+              ) VALUES (
+                $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
+                $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21
+              ) RETURNING id
+            `;
+            
+            const values = [
+              donneeNormalisee.type_suivi,
+              donneeNormalisee.date_operation,
+              donneeNormalisee.immatriculation || null,
+              donneeNormalisee.numero_equipement || null,
+              donneeNormalisee.marque || null,
+              donneeNormalisee.modele || null,
+              donneeNormalisee.montant || null,
+              donneeNormalisee.prix_unitaire || null,
+              donneeNormalisee.quantite_litres || null,
+              donneeNormalisee.type_carburant || 'essence',
+              donneeNormalisee.km_depart || null,
+              donneeNormalisee.km_arrivee || null,
+              donneeNormalisee.km_journalier || null,
+              donneeNormalisee.compteur_actuel || null,
+              donneeNormalisee.compteur_precedent || null,
+              donneeNormalisee.km_entre_repleins || null,
+              donneeNormalisee.consommation_aux_100 || null,
+              donneeNormalisee.est_replein || false,
+              donneeNormalisee.commentaire || null,
+              donneeNormalisee.donnees_brutes,
+              batchId
+            ];
+            
+            const result = await client.query(query, values);
+            
+            // Créer des alertes si erreurs
+            if (erreurs.length > 0) {
+              for (const erreur of erreurs) {
+                await client.query(`
+                  INSERT INTO alertes_carburant (suivi_id, type_alerte, severite, message)
+                  VALUES ($1, 'validation', 'warning', $2)
+                `, [result.rows[0].id, erreur]);
+              }
+              resultatGlobal.avertissements++;
+              resultatGlobal.parFeuille[nomFeuille].avertissements++;
+              resultatGlobal.details.push({
+                feuille: nomFeuille,
+                ligne: i + 2,
+                statut: 'warning',
+                message: 'Importé avec avertissements',
+                erreurs: erreurs
+              });
+            } else {
+              resultatGlobal.succes++;
+              resultatGlobal.parFeuille[nomFeuille].succes++;
+            }
+            
+          } catch (error) {
+            resultatGlobal.erreurs++;
+            resultatGlobal.parFeuille[nomFeuille].erreurs++;
+            resultatGlobal.details.push({
+              feuille: nomFeuille,
+              ligne: i + 2,
+              statut: 'error',
+              message: 'Erreur lors de l\'import',
+              erreurs: [error.message]
+            });
+          }
+        }
+        
+        console.log(`✅ Feuille "${nomFeuille}" traitée:`);
+        console.log(`   - Succès: ${resultatGlobal.parFeuille[nomFeuille].succes}`);
+        console.log(`   - Avertissements: ${resultatGlobal.parFeuille[nomFeuille].avertissements}`);
+        console.log(`   - Erreurs: ${resultatGlobal.parFeuille[nomFeuille].erreurs}`);
       }
       
-      const result = await client.query(
-        'DELETE FROM vehicules WHERE id = $1 RETURNING *',
-        [id]
-      );
-      
-      if (result.rows.length === 0) {
-        await client.query('ROLLBACK');
-        return res.status(404).json({ error: 'Véhicule non trouvé' });
-      }
+      // Enregistrer l'import global
+      await client.query(`
+        INSERT INTO imports_excel (batch_id, nom_fichier, type_fichier, nombre_lignes, statut, details_erreurs)
+        VALUES ($1, $2, 'multi-feuilles', $3, 'termine', $4)
+      `, [
+        batchId, 
+        nomFichier, 
+        resultatGlobal.succes + resultatGlobal.erreurs + resultatGlobal.avertissements,
+        JSON.stringify(resultatGlobal.parFeuille)
+      ]);
       
       await client.query('COMMIT');
       
-      res.json({ 
-        success: true, 
-        message: 'Véhicule supprimé avec succès' 
+      console.log(`\n${'='.repeat(60)}`);
+      console.log(`Import terminé avec succès!`);
+      console.log(`Total: ${resultatGlobal.succes} succès, ${resultatGlobal.avertissements} avertissements, ${resultatGlobal.erreurs} erreurs`);
+      console.log(`${'='.repeat(60)}\n`);
+      
+      res.json({
+        success: true,
+        message: 'Import terminé',
+        batchId,
+        nomFichier,
+        nombreFeuilles: workbook.SheetNames.length,
+        feuilles: workbook.SheetNames,
+        resultats: {
+          total: resultatGlobal.succes + resultatGlobal.erreurs + resultatGlobal.avertissements,
+          succes: resultatGlobal.succes,
+          avertissements: resultatGlobal.avertissements,
+          erreurs: resultatGlobal.erreurs
+        },
+        parFeuille: resultatGlobal.parFeuille,
+        details: resultatGlobal.details.slice(0, 50) // Limiter les détails pour la réponse
       });
+      
     } catch (error) {
       await client.query('ROLLBACK');
-      console.error('Erreur suppression véhicule:', error);
-      res.status(500).json({ error: error.message });
+      console.error('❌ Erreur import:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Erreur lors de l\'import',
+        error: error.message
+      });
     } finally {
       client.release();
     }
 });
 
-// ============================================
-// MAINTENANCE VÉHICULES
-// ============================================
-
-// Récupérer les maintenances d'un véhicule
-router.get('/vehicules/:id/maintenances', authentifier, async (req, res) => {
+// Autres endpoints...
+router.get('/imports', authentifier, async (req, res) => {
   try {
-    const { id } = req.params;
-    
     const result = await pool.query(`
-      SELECT * FROM maintenance_vehicules
-      WHERE vehicule_id = $1
-      ORDER BY date_maintenance DESC
-    `, [id]);
+      SELECT * FROM imports_excel
+      ORDER BY created_at DESC
+      LIMIT 50
+    `);
     
     res.json({ success: true, data: result.rows, count: result.rows.length });
   } catch (error) {
-    console.error('Erreur récupération maintenances:', error);
+    console.error('Erreur récupération imports:', error);
     res.status(500).json({ error: error.message });
   }
 });
 
-// Ajouter une maintenance
-router.post('/vehicules/:id/maintenances', 
-  authentifier, 
-  verifierRole('logistique', 'admin'), 
-  async (req, res) => {
-    try {
-      const { id } = req.params;
-      const { type_maintenance, description, date_maintenance, km_maintenance, cout, garage } = req.body;
-      
-      if (!type_maintenance || !date_maintenance) {
-        return res.status(400).json({ 
-          error: 'Champs requis manquants',
-          required: ['type_maintenance', 'date_maintenance']
-        });
-      }
-      
-      const result = await pool.query(`
-        INSERT INTO maintenance_vehicules (
-          vehicule_id, type_maintenance, description, date_maintenance,
-          km_maintenance, cout, garage, statut
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, 'planifie')
-        RETURNING *
-      `, [id, type_maintenance, description || null, date_maintenance, 
-          km_maintenance || null, cout || null, garage || null]);
-      
-      res.status(201).json({ 
-        success: true, 
-        message: 'Maintenance ajoutée avec succès',
-        maintenance: result.rows[0] 
-      });
-    } catch (error) {
-      console.error('Erreur ajout maintenance:', error);
-      res.status(500).json({ error: error.message });
+router.get('/imports/:batchId', authentifier, async (req, res) => {
+  try {
+    const { batchId } = req.params;
+    
+    const importResult = await pool.query(
+      'SELECT * FROM imports_excel WHERE batch_id = $1',
+      [batchId]
+    );
+    
+    if (importResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Import non trouvé' });
     }
-});
-
-// ============================================
-// DOCUMENTS VÉHICULES
-// ============================================
-
-// Récupérer les documents d'un véhicule
-router.get('/vehicules/:id/documents', authentifier, async (req, res) => {
-  try {
-    const { id } = req.params;
     
-    const result = await pool.query(`
-      SELECT * FROM documents_vehicules
-      WHERE vehicule_id = $1
-      ORDER BY date_expiration ASC
-    `, [id]);
+    const donnees = await pool.query(
+      'SELECT * FROM suivi_carburant WHERE import_batch_id = $1 ORDER BY created_at',
+      [batchId]
+    );
     
-    res.json({ success: true, data: result.rows, count: result.rows.length });
+    res.json({ 
+      success: true, 
+      import: importResult.rows[0],
+      donnees: donnees.rows,
+      count: donnees.rows.length
+    });
   } catch (error) {
-    console.error('Erreur récupération documents:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Ajouter un document
-router.post('/vehicules/:id/documents', 
-  authentifier, 
-  verifierRole('logistique', 'admin'), 
-  async (req, res) => {
-    try {
-      const { id } = req.params;
-      const { type_document, numero_document, date_emission, date_expiration, fichier_url } = req.body;
-      
-      if (!type_document || !date_expiration) {
-        return res.status(400).json({ 
-          error: 'Champs requis manquants',
-          required: ['type_document', 'date_expiration']
-        });
-      }
-      
-      const result = await pool.query(`
-        INSERT INTO documents_vehicules (
-          vehicule_id, type_document, numero_document, date_emission,
-          date_expiration, fichier_url
-        ) VALUES ($1, $2, $3, $4, $5, $6)
-        RETURNING *
-      `, [id, type_document, numero_document || null, date_emission || null,
-          date_expiration, fichier_url || null]);
-      
-      res.status(201).json({ 
-        success: true, 
-        message: 'Document ajouté avec succès',
-        document: result.rows[0] 
-      });
-    } catch (error) {
-      console.error('Erreur ajout document:', error);
-      res.status(500).json({ error: error.message });
-    }
-});
-
-// ============================================
-// DASHBOARDS
-// ============================================
-
-// Dashboard véhicules
-router.get('/dashboard/vehicules', authentifier, async (req, res) => {
-  try {
-    const result = await pool.query('SELECT * FROM dashboard_vehicules');
-    res.json({ success: true, data: result.rows });
-  } catch (error) {
-    console.error('Erreur dashboard véhicules:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Alertes documents expirés
-router.get('/dashboard/alertes-documents', authentifier, async (req, res) => {
-  try {
-    const result = await pool.query('SELECT * FROM alertes_documents_expires');
-    res.json({ success: true, data: result.rows, count: result.rows.length });
-  } catch (error) {
-    console.error('Erreur alertes documents:', error);
+    console.error('Erreur récupération détails import:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -11697,460 +12125,17 @@ router.get('/demandes-voiture/:id/pdf', authentifier, async (req, res) => {
 
 module.exports = router;
 
-────────────────── fleet-management-backend/src/routes/import.js ──────────────────
-// fleet-management-backend/src/routes/import.js
-const express = require('express');
-const router = express.Router();
-const multer = require('multer');
-const XLSX = require('xlsx');
-const { v4: uuidv4 } = require('uuid');
-const pool = require('../config/database');
-const { authentifier, verifierRole } = require('../middleware/auth');
-
-// Configuration Multer pour l'upload
-const storage = multer.memoryStorage();
-const upload = multer({ 
-  storage: storage,
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB max
-  fileFilter: (req, file, cb) => {
-    if (file.mimetype === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
-        file.mimetype === 'application/vnd.ms-excel') {
-      cb(null, true);
-    } else {
-      cb(new Error('Seuls les fichiers Excel (.xlsx, .xls) sont autorisés'));
-    }
-  }
-});
-
-// ============================================
-// FONCTIONS UTILITAIRES
-// ============================================
-
-function detecterTypeFichier(data, nomFichier) {
-  const premiereColonne = Object.keys(data[0] || {})[0]?.toLowerCase() || '';
-  const colonnes = Object.keys(data[0] || {}).map(c => c.toLowerCase());
-  const nomFichierLower = nomFichier.toLowerCase();
-  
-  // Détection par nom de fichier
-  if (nomFichierLower.includes('groupe') && nomFichierLower.includes('electro')) {
-    return 'groupe_electrogene';
-  }
-  if (nomFichierLower.includes('suivi') && nomFichierLower.includes('carburant')) {
-    return 'suivi_carburant';
-  }
-  if (nomFichierLower.includes('autres') && nomFichierLower.includes('carburant')) {
-    return 'autres_carburants';
-  }
-  
-  // Détection par colonnes spécifiques
-  const hasImmatriculation = colonnes.some(c => c.includes('immat'));
-  const hasKmDepart = colonnes.some(c => c.includes('km') && c.includes('depart'));
-  const hasNumeroGroupe = colonnes.some(c => c.includes('numero') && c.includes('groupe'));
-  const hasHeuresFonctionnement = colonnes.some(c => c.includes('heure') && c.includes('fonction'));
-  
-  if (hasNumeroGroupe || hasHeuresFonctionnement) {
-    return 'groupe_electrogene';
-  }
-  if (hasImmatriculation && hasKmDepart) {
-    return 'suivi_carburant';
-  }
-  
-  // Par défaut
-  return 'suivi_carburant';
-}
-
-function normaliserColonne(nom) {
-  const mapping = {
-    'date': 'date_operation',
-    'immat': 'immatriculation',
-    'immatriculation': 'immatriculation',
-    'montant': 'montant',
-    'prix': 'prix_unitaire',
-    'prix unitaire': 'prix_unitaire',
-    'litre': 'quantite_litres',
-    'litres': 'quantite_litres',
-    'quantite': 'quantite_litres',
-    'quantité': 'quantite_litres',
-    'km départ': 'km_depart',
-    'km_depart': 'km_depart',
-    'km de départ': 'km_depart',
-    'km arrivée': 'km_arrivee',
-    'km_arrivee': 'km_arrivee',
-    'km d\'arrivée': 'km_arrivee',
-    'km journalier': 'km_journalier',
-    'km_journalier': 'km_journalier',
-    'compteur': 'compteur_actuel',
-    'compteur actuel': 'compteur_actuel',
-    'compteur précédent': 'compteur_precedent',
-    'compteur precedent': 'compteur_precedent',
-    'consommation': 'consommation_aux_100',
-    'carburant': 'type_carburant',
-    'type carburant': 'type_carburant',
-    'marque': 'marque',
-    'modele': 'modele',
-    'modèle': 'modele',
-    'commentaire': 'commentaire',
-    'observation': 'commentaire',
-    'numero groupe': 'numero_equipement',
-    'numéro groupe': 'numero_equipement',
-    'numero equipement': 'numero_equipement',
-    'heures fonctionnement': 'heures_fonctionnement'
-  };
-  
-  const nomNormalise = nom.toLowerCase().trim();
-  return mapping[nomNormalise] || nomNormalise.replace(/\s+/g, '_');
-}
-
-function normaliserDonnees(ligneExcel, typeFichier) {
-  const donneeNormalisee = {
-    type_suivi: typeFichier,
-    donnees_brutes: JSON.stringify(ligneExcel)
-  };
-  
-  for (const [cle, valeur] of Object.entries(ligneExcel)) {
-    if (valeur === null || valeur === undefined || valeur === '') continue;
-    
-    const colonneNormalisee = normaliserColonne(cle);
-    
-    // Conversion des dates Excel
-    if (colonneNormalisee === 'date_operation') {
-      if (typeof valeur === 'number') {
-        const date = XLSX.SSF.parse_date_code(valeur);
-        donneeNormalisee.date_operation = new Date(date.y, date.m - 1, date.d);
-      } else if (valeur instanceof Date) {
-        donneeNormalisee.date_operation = valeur;
-      } else {
-        // Tenter de parser la chaîne
-        const parsed = new Date(valeur);
-        if (!isNaN(parsed)) {
-          donneeNormalisee.date_operation = parsed;
-        }
-      }
-    }
-    // Conversion des nombres
-    else if (['montant', 'prix_unitaire', 'quantite_litres', 'km_depart', 
-              'km_arrivee', 'km_journalier', 'compteur_actuel', 'compteur_precedent',
-              'heures_fonctionnement'].includes(colonneNormalisee)) {
-      const nombre = parseFloat(String(valeur).replace(/[^0-9.-]/g, ''));
-      if (!isNaN(nombre)) {
-        donneeNormalisee[colonneNormalisee] = nombre;
-      }
-    }
-    // Valeurs textuelles
-    else {
-      donneeNormalisee[colonneNormalisee] = String(valeur).trim();
-    }
-  }
-  
-  return donneeNormalisee;
-}
-
-function validerEtCalculer(donnee) {
-  const erreurs = [];
-  
-  // Calcul km_entre_repleins
-  if (donnee.compteur_actuel && donnee.compteur_precedent) {
-    donnee.km_entre_repleins = donnee.compteur_actuel - donnee.compteur_precedent;
-    
-    if (donnee.km_entre_repleins < 0) {
-      erreurs.push('KM entre repleins négatif (compteur actuel < compteur précédent)');
-    }
-  }
-  
-  // Calcul km_arrivee
-  if (donnee.km_depart && donnee.km_journalier) {
-    donnee.km_arrivee = donnee.km_depart + donnee.km_journalier;
-  }
-  
-  // Calcul compteur si non fourni
-  if (!donnee.compteur_actuel && donnee.km_depart && donnee.km_journalier) {
-    donnee.compteur_actuel = donnee.km_depart + (donnee.km_journalier < 50 ? 15 : 20);
-  }
-  
-  // Calcul de la consommation
-  if (donnee.quantite_litres && donnee.km_entre_repleins && donnee.km_entre_repleins > 0) {
-    donnee.consommation_aux_100 = (donnee.quantite_litres / donnee.km_entre_repleins) * 100;
-  }
-  
-  // Détermination replein
-  if (donnee.montant) {
-    donnee.est_replein = donnee.montant >= 200000;
-    
-    // Validation cohérence
-    if (donnee.est_replein && donnee.montant < 200000) {
-      erreurs.push('Montant < 200000 Ar marqué comme replein');
-    }
-  }
-  
-  // Validations métier
-  if (donnee.km_journalier && donnee.km_journalier >= 120) {
-    erreurs.push('KM journalier >= 120 (limite dépassée)');
-  }
-  
-  if (donnee.consommation_aux_100) {
-    if (donnee.consommation_aux_100 < 15) {
-      erreurs.push(`Consommation ${donnee.consommation_aux_100.toFixed(2)} L/100km < 15 (trop faible)`);
-    }
-    if (donnee.consommation_aux_100 >= 16) {
-      erreurs.push(`Consommation ${donnee.consommation_aux_100.toFixed(2)} L/100km >= 16 (trop élevée)`);
-    }
-  }
-  
-  // Date par défaut si manquante
-  if (!donnee.date_operation) {
-    donnee.date_operation = new Date();
-  }
-  
-  return { donnee, erreurs };
-}
-
-// ============================================
-// ENDPOINT IMPORT EXCEL
-// ============================================
-
-router.post('/import-excel', 
-  authentifier, 
-  verifierRole('logistique', 'admin'),
-  upload.single('fichier'), 
-  async (req, res) => {
-    const client = await pool.connect();
-    
-    try {
-      if (!req.file) {
-        return res.status(400).json({ 
-          error: 'Aucun fichier fourni',
-          message: 'Veuillez sélectionner un fichier Excel' 
-        });
-      }
-      
-      const buffer = req.file.buffer;
-      const nomFichier = req.file.originalname;
-      const batchId = uuidv4();
-      
-      console.log(`Début import: ${nomFichier} (batch: ${batchId})`);
-      
-      // Lecture du fichier Excel
-      const workbook = XLSX.read(buffer, { 
-        type: 'buffer', 
-        cellDates: true,
-        dateNF: 'dd/mm/yyyy'
-      });
-      
-      const premiereFeuille = workbook.SheetNames[0];
-      const donnees = XLSX.utils.sheet_to_json(workbook.Sheets[premiereFeuille]);
-      
-      if (donnees.length === 0) {
-        return res.status(400).json({ 
-          error: 'Fichier vide',
-          message: 'Le fichier Excel ne contient aucune donnée' 
-        });
-      }
-      
-      // Détection automatique du type
-      const typeFichier = detecterTypeFichier(donnees, nomFichier);
-      console.log(`Type détecté: ${typeFichier}`);
-      
-      await client.query('BEGIN');
-      
-      // Enregistrer l'import
-      await client.query(`
-        INSERT INTO imports_excel (batch_id, nom_fichier, type_fichier, nombre_lignes, statut)
-        VALUES ($1, $2, $3, $4, 'en_cours')
-      `, [batchId, nomFichier, typeFichier, donnees.length]);
-      
-      const resultats = {
-        succes: 0,
-        erreurs: 0,
-        avertissements: 0,
-        details: []
-      };
-      
-      // Traiter chaque ligne
-      for (let i = 0; i < donnees.length; i++) {
-        const ligneExcel = donnees[i];
-        
-        try {
-          // Normalisation
-          let donneeNormalisee = normaliserDonnees(ligneExcel, typeFichier);
-          
-          // Validation et calculs
-          const { donnee, erreurs } = validerEtCalculer(donneeNormalisee);
-          donneeNormalisee = donnee;
-          donneeNormalisee.import_batch_id = batchId;
-          
-          // Insertion en base
-          const query = `
-            INSERT INTO suivi_carburant (
-              type_suivi, date_operation, immatriculation, numero_equipement,
-              marque, modele, montant, prix_unitaire, quantite_litres,
-              type_carburant, km_depart, km_arrivee, km_journalier,
-              compteur_actuel, compteur_precedent, km_entre_repleins,
-              consommation_aux_100, est_replein, commentaire,
-              donnees_brutes, import_batch_id
-            ) VALUES (
-              $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
-              $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21
-            ) RETURNING id
-          `;
-          
-          const values = [
-            donneeNormalisee.type_suivi,
-            donneeNormalisee.date_operation,
-            donneeNormalisee.immatriculation || null,
-            donneeNormalisee.numero_equipement || null,
-            donneeNormalisee.marque || null,
-            donneeNormalisee.modele || null,
-            donneeNormalisee.montant || null,
-            donneeNormalisee.prix_unitaire || null,
-            donneeNormalisee.quantite_litres || null,
-            donneeNormalisee.type_carburant || 'essence',
-            donneeNormalisee.km_depart || null,
-            donneeNormalisee.km_arrivee || null,
-            donneeNormalisee.km_journalier || null,
-            donneeNormalisee.compteur_actuel || null,
-            donneeNormalisee.compteur_precedent || null,
-            donneeNormalisee.km_entre_repleins || null,
-            donneeNormalisee.consommation_aux_100 || null,
-            donneeNormalisee.est_replein || false,
-            donneeNormalisee.commentaire || null,
-            donneeNormalisee.donnees_brutes,
-            batchId
-          ];
-          
-          const result = await client.query(query, values);
-          
-          // Créer des alertes si erreurs
-          if (erreurs.length > 0) {
-            for (const erreur of erreurs) {
-              await client.query(`
-                INSERT INTO alertes_carburant (suivi_id, type_alerte, severite, message)
-                VALUES ($1, 'validation', 'warning', $2)
-              `, [result.rows[0].id, erreur]);
-            }
-            resultats.avertissements++;
-            resultats.details.push({
-              ligne: i + 2, // +2 car Excel commence à 1 et ligne 1 = en-têtes
-              statut: 'warning',
-              message: 'Importé avec avertissements',
-              erreurs: erreurs
-            });
-          } else {
-            resultats.succes++;
-            resultats.details.push({
-              ligne: i + 2,
-              statut: 'success',
-              message: 'Importé avec succès'
-            });
-          }
-          
-        } catch (error) {
-          resultats.erreurs++;
-          resultats.details.push({
-            ligne: i + 2,
-            statut: 'error',
-            message: 'Erreur lors de l\'import',
-            erreurs: [error.message]
-          });
-        }
-      }
-      
-      // Mettre à jour le statut de l'import
-      await client.query(`
-        UPDATE imports_excel 
-        SET 
-          statut = 'termine', 
-          nombre_erreurs = $1,
-          details_erreurs = $2
-        WHERE batch_id = $3
-      `, [resultats.erreurs, JSON.stringify(resultats.details), batchId]);
-      
-      await client.query('COMMIT');
-      
-      console.log(`Import terminé: ${resultats.succes} succès, ${resultats.avertissements} avertissements, ${resultats.erreurs} erreurs`);
-      
-      res.json({
-        success: true,
-        message: 'Import terminé',
-        batchId,
-        typeFichier,
-        nomFichier,
-        resultats: {
-          total: donnees.length,
-          succes: resultats.succes,
-          avertissements: resultats.avertissements,
-          erreurs: resultats.erreurs
-        },
-        details: resultats.details
-      });
-      
-    } catch (error) {
-      await client.query('ROLLBACK');
-      console.error('Erreur import:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Erreur lors de l\'import',
-        error: error.message
-      });
-    } finally {
-      client.release();
-    }
-});
-
-// Récupérer l'historique des imports
-router.get('/imports', authentifier, async (req, res) => {
-  try {
-    const result = await pool.query(`
-      SELECT * FROM imports_excel
-      ORDER BY created_at DESC
-      LIMIT 50
-    `);
-    
-    res.json({ success: true, data: result.rows, count: result.rows.length });
-  } catch (error) {
-    console.error('Erreur récupération imports:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Récupérer les détails d'un import
-router.get('/imports/:batchId', authentifier, async (req, res) => {
-  try {
-    const { batchId } = req.params;
-    
-    const importResult = await pool.query(
-      'SELECT * FROM imports_excel WHERE batch_id = $1',
-      [batchId]
-    );
-    
-    if (importResult.rows.length === 0) {
-      return res.status(404).json({ error: 'Import non trouvé' });
-    }
-    
-    const donnees = await pool.query(
-      'SELECT * FROM suivi_carburant WHERE import_batch_id = $1 ORDER BY created_at',
-      [batchId]
-    );
-    
-    res.json({ 
-      success: true, 
-      import: importResult.rows[0],
-      donnees: donnees.rows,
-      count: donnees.rows.length
-    });
-  } catch (error) {
-    console.error('Erreur récupération détails import:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-module.exports = router;
-
 ────────────────── fleet-management-backend/src/routes/demandes.js ──────────────────
 // fleet-management-backend/src/routes/demandes.js
 const express = require('express');
 const router = express.Router();
 const pool = require('../config/database');
-const { authentifier, verifierRole } = require('../middleware/auth');
+// Auth désactivée pour DEV
+const authentifier = (req, res, next) => { 
+  req.user = { id: 1, role: 'admin', email: 'admin@prirtem.mg' }; 
+  next(); 
+};
+const verifierRole = (...roles) => (req, res, next) => next();
 
 // ============================================
 // DEMANDES DE CARBURANT
@@ -12644,7 +12629,12 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../config/database');
 const bcrypt = require('bcrypt');
-const { authentifier, verifierRole } = require('../middleware/auth');
+// Auth désactivée pour DEV
+const authentifier = (req, res, next) => { 
+  req.user = { id: 1, role: 'admin', email: 'admin@prirtem.mg' }; 
+  next(); 
+};
+const verifierRole = (...roles) => (req, res, next) => next();
 
 // ============================================
 // GESTION DES CHAUFFEURS
@@ -12705,11 +12695,11 @@ router.get('/chauffeurs/:id', authentifier, async (req, res) => {
         u.service,
         u.est_actif,
         COUNT(DISTINCT m.id) as nombre_missions,
-        SUM(m.km_parcourus) as total_km_parcourus,
-        AVG(m.km_parcourus) as moyenne_km_mission
+        SUM(m.kilometrage_retour - m.kilometrage_depart) as total_km_parcourus,
+        AVG(m.kilometrage_retour - m.kilometrage_depart) as moyenne_km_mission
       FROM chauffeurs c
       JOIN utilisateurs u ON c.utilisateur_id = u.id
-      LEFT JOIN missions m ON c.id = m.chauffeur_id AND m.statut = 'terminee'
+      LEFT JOIN demandes_voiture m ON c.id = m.chauffeur_id AND m.statut = 'terminee'
       WHERE c.id = $1
       GROUP BY c.id, u.nom, u.prenom, u.email, u.telephone, u.service, u.est_actif
     `, [id]);
@@ -13060,6 +13050,381 @@ router.get('/chauffeurs/disponibles/:date',
 
 module.exports = router;
 
+────────────────── fleet-management-backend/src/routes/vehicules.js ──────────────────
+// fleet-management-backend/src/routes/vehicules.js
+const express = require('express');
+const router = express.Router();
+const pool = require('../config/database');
+// Auth désactivée pour DEV
+const authentifier = (req, res, next) => { 
+  req.user = { id: 1, role: 'admin', email: 'admin@prirtem.mg' }; 
+  next(); 
+};
+const verifierRole = (...roles) => (req, res, next) => next();
+
+// ============================================
+// GESTION DES VÉHICULES
+// ============================================
+
+// Récupérer tous les véhicules
+router.get('/vehicules', authentifier, async (req, res) => {
+  try {
+    const { statut, type_vehicule } = req.query;
+    
+    let query = 'SELECT * FROM vehicules WHERE 1=1';
+    const params = [];
+    let paramCount = 1;
+    
+    if (statut) {
+      query += ` AND statut = $${paramCount++}`;
+      params.push(statut);
+    }
+    
+    if (type_vehicule) {
+      query += ` AND type_vehicule = $${paramCount++}`;
+      params.push(type_vehicule);
+    }
+    
+    query += ' ORDER BY immatriculation';
+    
+    const result = await pool.query(query, params);
+    res.json({ success: true, data: result.rows, count: result.rows.length });
+  } catch (error) {
+    console.error('Erreur récupération véhicules:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Récupérer un véhicule spécifique
+router.get('/vehicules/:id', authentifier, async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const result = await pool.query(`
+      SELECT 
+        v.*,
+        COUNT(DISTINCT m.id) as nombre_missions,
+        SUM(m.km_parcourus) as total_km_missions,
+        AVG(sc.consommation_aux_100) as consommation_moyenne
+      FROM vehicules v
+      LEFT JOIN missions m ON v.id = m.vehicule_id AND m.statut = 'terminee'
+      LEFT JOIN suivi_carburant sc ON v.immatriculation = sc.immatriculation
+      WHERE v.id = $1
+      GROUP BY v.id
+    `, [id]);
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Véhicule non trouvé' });
+    }
+    
+    res.json({ success: true, data: result.rows[0] });
+  } catch (error) {
+    console.error('Erreur récupération véhicule:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Créer un nouveau véhicule
+router.post('/vehicules', 
+  authentifier, 
+  verifierRole('logistique', 'admin'), 
+  async (req, res) => {
+    try {
+      const {
+        immatriculation, marque, modele, annee, type_vehicule,
+        type_carburant, capacite_reservoir, couleur, numero_chassis,
+        date_acquisition
+      } = req.body;
+      
+      // Validation
+      if (!immatriculation || !marque || !modele) {
+        return res.status(400).json({ 
+          error: 'Champs requis manquants',
+          required: ['immatriculation', 'marque', 'modele']
+        });
+      }
+      
+      const result = await pool.query(`
+        INSERT INTO vehicules (
+          immatriculation, marque, modele, annee, type_vehicule,
+          type_carburant, capacite_reservoir, couleur, numero_chassis,
+          date_acquisition, statut
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'disponible')
+        RETURNING *
+      `, [
+        immatriculation.toUpperCase(), marque, modele, annee || null, 
+        type_vehicule || 'voiture', type_carburant || 'essence',
+        capacite_reservoir || null, couleur || null, numero_chassis || null,
+        date_acquisition || null
+      ]);
+      
+      res.status(201).json({ 
+        success: true, 
+        message: 'Véhicule créé avec succès',
+        vehicule: result.rows[0] 
+      });
+    } catch (error) {
+      if (error.code === '23505') { // Duplicate key
+        return res.status(409).json({ 
+          error: 'Cette immatriculation existe déjà' 
+        });
+      }
+      console.error('Erreur création véhicule:', error);
+      res.status(500).json({ error: error.message });
+    }
+});
+
+// Modifier un véhicule
+router.put('/vehicules/:id', 
+  authentifier, 
+  verifierRole('logistique', 'admin'), 
+  async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updates = req.body;
+      
+      // Champs autorisés à être modifiés
+      const champsAutorises = [
+        'marque', 'modele', 'annee', 'type_vehicule', 'type_carburant',
+        'capacite_reservoir', 'couleur', 'numero_chassis', 'statut',
+        'km_actuel', 'photo_url'
+      ];
+      
+      const setClauses = [];
+      const values = [];
+      let paramCount = 1;
+      
+      Object.keys(updates).forEach(key => {
+        if (champsAutorises.includes(key)) {
+          setClauses.push(`${key} = $${paramCount++}`);
+          values.push(updates[key]);
+        }
+      });
+      
+      if (setClauses.length === 0) {
+        return res.status(400).json({ 
+          error: 'Aucun champ valide à mettre à jour',
+          champsAutorises 
+        });
+      }
+      
+      values.push(id);
+      
+      const result = await pool.query(`
+        UPDATE vehicules 
+        SET ${setClauses.join(', ')}, updated_at = CURRENT_TIMESTAMP
+        WHERE id = $${paramCount}
+        RETURNING *
+      `, values);
+      
+      if (result.rows.length === 0) {
+        return res.status(404).json({ error: 'Véhicule non trouvé' });
+      }
+      
+      res.json({ 
+        success: true, 
+        message: 'Véhicule modifié avec succès',
+        vehicule: result.rows[0] 
+      });
+    } catch (error) {
+      console.error('Erreur modification véhicule:', error);
+      res.status(500).json({ error: error.message });
+    }
+});
+
+// Supprimer un véhicule
+router.delete('/vehicules/:id', 
+  authentifier, 
+  verifierRole('admin'), 
+  async (req, res) => {
+    const client = await pool.connect();
+    try {
+      const { id } = req.params;
+      
+      await client.query('BEGIN');
+      
+      // Vérifier si le véhicule a des missions en cours
+      const missionsEnCours = await client.query(
+        'SELECT id FROM missions WHERE vehicule_id = $1 AND statut = $2',
+        [id, 'en_cours']
+      );
+      
+      if (missionsEnCours.rows.length > 0) {
+        await client.query('ROLLBACK');
+        return res.status(400).json({ 
+          error: 'Impossible de supprimer un véhicule avec des missions en cours' 
+        });
+      }
+      
+      const result = await client.query(
+        'DELETE FROM vehicules WHERE id = $1 RETURNING *',
+        [id]
+      );
+      
+      if (result.rows.length === 0) {
+        await client.query('ROLLBACK');
+        return res.status(404).json({ error: 'Véhicule non trouvé' });
+      }
+      
+      await client.query('COMMIT');
+      
+      res.json({ 
+        success: true, 
+        message: 'Véhicule supprimé avec succès' 
+      });
+    } catch (error) {
+      await client.query('ROLLBACK');
+      console.error('Erreur suppression véhicule:', error);
+      res.status(500).json({ error: error.message });
+    } finally {
+      client.release();
+    }
+});
+
+// ============================================
+// MAINTENANCE VÉHICULES
+// ============================================
+
+// Récupérer les maintenances d'un véhicule
+router.get('/vehicules/:id/maintenances', authentifier, async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const result = await pool.query(`
+      SELECT * FROM entretiens 
+      WHERE vehicule_id = $1
+      ORDER BY date_debut DESC
+    `, [id]);
+    
+    res.json({ success: true, data: result.rows, count: result.rows.length });
+  } catch (error) {
+    console.error('Erreur récupération maintenances:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Ajouter une maintenance
+router.post('/vehicules/:id/maintenances', 
+  authentifier, 
+  verifierRole('logistique', 'admin'), 
+  async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { type_entretien, description, date_debut, kilometrage, cout, garage } = req.body;
+      
+      if (!type_entretien || !date_debut) {
+        return res.status(400).json({ 
+          error: 'Champs requis manquants',
+          required: ['type_entretien', 'date_debut']
+        });
+      }
+      
+      const result = await pool.query(`
+        INSERT INTO entretiens (
+          vehicule_id, type_entretien, description, date_debut,
+          kilometrage, cout, garage, statut
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, 'planifie')
+        RETURNING *
+      `, [id, type_entretien, description || null, date_debut, 
+          kilometrage || null, cout || null, garage || null]);
+      
+      res.status(201).json({ 
+        success: true, 
+        message: 'Maintenance ajoutée avec succès',
+        maintenance: result.rows[0] 
+      });
+    } catch (error) {
+      console.error('Erreur ajout maintenance:', error);
+      res.status(500).json({ error: error.message });
+    }
+});
+
+// ============================================
+// DOCUMENTS VÉHICULES
+// ============================================
+
+// Récupérer les documents d'un véhicule
+router.get('/vehicules/:id/documents', authentifier, async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const result = await pool.query(`
+      SELECT * FROM documents_vehicules
+      WHERE vehicule_id = $1
+      ORDER BY date_expiration ASC
+    `, [id]);
+    
+    res.json({ success: true, data: result.rows, count: result.rows.length });
+  } catch (error) {
+    console.error('Erreur récupération documents:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Ajouter un document
+router.post('/vehicules/:id/documents', 
+  authentifier, 
+  verifierRole('logistique', 'admin'), 
+  async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { type_document, numero_document, date_emission, date_expiration, fichier_url } = req.body;
+      
+      if (!type_document || !date_expiration) {
+        return res.status(400).json({ 
+          error: 'Champs requis manquants',
+          required: ['type_document', 'date_expiration']
+        });
+      }
+      
+      const result = await pool.query(`
+        INSERT INTO documents_vehicules (
+          vehicule_id, type_document, numero_document, date_emission,
+          date_expiration, fichier_url
+        ) VALUES ($1, $2, $3, $4, $5, $6)
+        RETURNING *
+      `, [id, type_document, numero_document || null, date_emission || null,
+          date_expiration, fichier_url || null]);
+      
+      res.status(201).json({ 
+        success: true, 
+        message: 'Document ajouté avec succès',
+        document: result.rows[0] 
+      });
+    } catch (error) {
+      console.error('Erreur ajout document:', error);
+      res.status(500).json({ error: error.message });
+    }
+});
+
+// ============================================
+// DASHBOARDS
+// ============================================
+
+// Dashboard véhicules
+router.get('/dashboard/vehicules', authentifier, async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM dashboard_vehicules');
+    res.json({ success: true, data: result.rows });
+  } catch (error) {
+    console.error('Erreur dashboard véhicules:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Alertes documents expirés
+router.get('/dashboard/alertes-documents', authentifier, async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM alertes_documents_expires');
+    res.json({ success: true, data: result.rows, count: result.rows.length });
+  } catch (error) {
+    console.error('Erreur alertes documents:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+module.exports = router;
+
 ────────────────── fleet-management-backend/src/middleware/auth.js ──────────────────
 // fleet-management-backend/src/middleware/auth.js
 const jwt = require('jsonwebtoken');
@@ -13197,271 +13562,37 @@ module.exports = {
 };
 
 ────────────────── fleet-management-backend/src/config/database.js ──────────────────
+// fleet-management-backend/src/config/database.js
 const { Pool } = require('pg');
-const fs = require('fs');
-const path = require('path');
 require('dotenv').config();
 
-// Configuration de connexion PostgreSQL
+// Configuration de connexion PostgreSQL CORRIGÉE
 const pool = new Pool({
   host: process.env.DB_HOST || 'localhost',
   port: process.env.DB_PORT || 5432,
   user: process.env.DB_USER || 'postgres',
   password: process.env.DB_PASSWORD,
-  database: 'postgres' // Connexion initiale à la base postgres
+  database: process.env.DB_NAME || 'fleet_management', // CORRECTION ICI
+  // Options supplémentaires pour éviter les erreurs de connexion
+  max: 20, // Nombre maximum de clients dans le pool
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 2000,
 });
 
-const DB_NAME = process.env.DB_NAME || 'fleet_management';
+// Gérer les erreurs de connexion
+pool.on('error', (err, client) => {
+  console.error('❌ Erreur inattendue sur un client inactif:', err);
+  process.exit(-1);
+});
 
-// Couleurs pour les logs
-const colors = {
-  reset: '\x1b[0m',
-  bright: '\x1b[1m',
-  red: '\x1b[31m',
-  green: '\x1b[32m',
-  yellow: '\x1b[33m',
-  blue: '\x1b[34m',
-  cyan: '\x1b[36m'
-};
-
-function log(message, color = 'reset') {
-  console.log(`${colors[color]}${message}${colors.reset}`);
-}
-
-function logBox(title, content = '', color = 'cyan') {
-  const width = 50;
-  const line = '═'.repeat(width);
-  
-  console.log(`${colors[color]}╔${line}╗${colors.reset}`);
-  console.log(`${colors[color]}║${colors.bright} ${title.padEnd(width - 1)}${colors[color]}║${colors.reset}`);
-  
-  if (content) {
-    console.log(`${colors[color]}╠${line}╣${colors.reset}`);
-    const lines = content.split('\n');
-    lines.forEach(line => {
-      console.log(`${colors[color]}║${colors.reset} ${line.padEnd(width - 1)} ${colors[color]}║${colors.reset}`);
-    });
-  }
-  
-  console.log(`${colors[color]}╚${line}╝${colors.reset}`);
-}
-
-async function testConnection() {
-  try {
-    const client = await pool.connect();
-    log('✅ Connexion à PostgreSQL réussie!', 'green');
-    client.release();
-    return true;
-  } catch (error) {
-    log('❌ Erreur de connexion à PostgreSQL:', 'red');
-    console.error(error.message);
-    log('\n⚠️  Vérifiez:', 'yellow');
-    log('   1. PostgreSQL est démarré', 'yellow');
-    log('   2. Le mot de passe dans .env est correct', 'yellow');
-    log('   3. Les paramètres de connexion sont bons', 'yellow');
-    return false;
-  }
-}
-
-async function databaseExists() {
-  try {
-    const result = await pool.query(
-      "SELECT 1 FROM pg_database WHERE datname = $1",
-      [DB_NAME]
-    );
-    return result.rows.length > 0;
-  } catch (error) {
-    return false;
-  }
-}
-
-async function createDatabase() {
-  try {
-    const exists = await databaseExists();
-    
-    if (exists) {
-      log(`\n⚠️  La base de données '${DB_NAME}' existe déjà`, 'yellow');
-      
-      // Demander confirmation pour recréer
-      const readline = require('readline');
-      const rl = readline.createInterface({
-        input: process.stdin,
-        output: process.stdout
-      });
-      
-      return new Promise((resolve) => {
-        rl.question('Voulez-vous la recréer? (o/N): ', (answer) => {
-          rl.close();
-          if (answer.toLowerCase() === 'o' || answer.toLowerCase() === 'oui') {
-            pool.query(`DROP DATABASE IF EXISTS ${DB_NAME}`)
-              .then(() => {
-                return pool.query(`CREATE DATABASE ${DB_NAME}`);
-              })
-              .then(() => {
-                log(`✅ Base de données '${DB_NAME}' recréée avec succès!`, 'green');
-                resolve(true);
-              })
-              .catch((error) => {
-                log('❌ Erreur lors de la recréation:', 'red');
-                console.error(error.message);
-                resolve(false);
-              });
-          } else {
-            log('ℹ️  Utilisation de la base existante', 'blue');
-            resolve(true);
-          }
-        });
-      });
-    } else {
-      await pool.query(`CREATE DATABASE ${DB_NAME}`);
-      log(`✅ Base de données '${DB_NAME}' créée avec succès!`, 'green');
-      return true;
-    }
-  } catch (error) {
-    log('❌ Erreur lors de la création de la base:', 'red');
-    console.error(error.message);
-    return false;
-  }
-}
-
-async function executeSQLFile(filePath, description) {
-  const dbPool = new Pool({
-    host: process.env.DB_HOST || 'localhost',
-    port: process.env.DB_PORT || 5432,
-    user: process.env.DB_USER || 'postgres',
-    password: process.env.DB_PASSWORD,
-    database: DB_NAME
-  });
-
-  try {
-    const sql = fs.readFileSync(filePath, 'utf8');
-    
-    log(`\n📄 Exécution: ${description}...`, 'cyan');
-    
-    await dbPool.query(sql);
-    
-    log(`✅ ${description} exécuté avec succès!`, 'green');
-    return true;
-  } catch (error) {
-    log(`❌ Erreur dans ${description}:`, 'red');
-    console.error(error.message);
-    return false;
-  } finally {
-    await dbPool.end();
-  }
-}
-
-async function initializeDatabase() {
-  logBox('🚀 INITIALISATION DE LA BASE DE DONNÉES', 
-         `Base de données: ${DB_NAME}\nHôte: ${process.env.DB_HOST}:${process.env.DB_PORT}`, 
-         'blue');
-
-  // Étape 1: Test de connexion
-  log('\n📡 Étape 1/5: Test de connexion...', 'cyan');
-  const connected = await testConnection();
-  if (!connected) {
-    log('\n❌ Impossible de continuer sans connexion', 'red');
-    process.exit(1);
-  }
-
-  // Étape 2: Création de la base
-  log('\n🗄️  Étape 2/5: Création de la base de données...', 'cyan');
-  const created = await createDatabase();
-  if (!created) {
-    log('\n❌ Impossible de continuer sans base de données', 'red');
-    process.exit(1);
-  }
-
-  // Fermer la connexion à postgres
-  await pool.end();
-
-  // Étape 3: Création du schéma
-  log('\n📐 Étape 3/5: Création du schéma...', 'cyan');
-  const schemaPath = path.join(__dirname, 'database', 'schema.sql');
-  if (!fs.existsSync(schemaPath)) {
-    log(`❌ Fichier non trouvé: ${schemaPath}`, 'red');
-    process.exit(1);
-  }
-  const schemaOk = await executeSQLFile(schemaPath, 'Schéma des tables');
-  if (!schemaOk) process.exit(1);
-
-  // Étape 4: Création des triggers
-  log('\n⚡ Étape 4/5: Création des triggers...', 'cyan');
-  const triggersPath = path.join(__dirname, 'database', 'triggers.sql');
-  if (!fs.existsSync(triggersPath)) {
-    log(`❌ Fichier non trouvé: ${triggersPath}`, 'red');
-    process.exit(1);
-  }
-  const triggersOk = await executeSQLFile(triggersPath, 'Triggers et fonctions');
-  if (!triggersOk) process.exit(1);
-
-  // Étape 5: Création des vues
-  log('\n👁️  Étape 5/5: Création des vues...', 'cyan');
-  const viewsPath = path.join(__dirname, 'database', 'views.sql');
-  if (!fs.existsSync(viewsPath)) {
-    log(`❌ Fichier non trouvé: ${viewsPath}`, 'red');
-    process.exit(1);
-  }
-  const viewsOk = await executeSQLFile(viewsPath, 'Vues SQL');
-  if (!viewsOk) process.exit(1);
-
-  // Étape 6: Insertion des données initiales (optionnel)
-  const seedPath = path.join(__dirname, 'database', 'seed.sql');
-  if (fs.existsSync(seedPath)) {
-    log('\n🌱 Étape bonus: Insertion des données initiales...', 'cyan');
-    
-    const readline = require('readline');
-    const rl = readline.createInterface({
-      input: process.stdin,
-      output: process.stdout
-    });
-    
-    return new Promise((resolve) => {
-      rl.question('Voulez-vous insérer les données de test? (o/N): ', async (answer) => {
-        rl.close();
-        if (answer.toLowerCase() === 'o' || answer.toLowerCase() === 'oui') {
-          await executeSQLFile(seedPath, 'Données initiales');
-          
-          logBox('✅ INITIALISATION TERMINÉE AVEC SUCCÈS!', 
-                 `Base: ${DB_NAME}\nSchéma: ✅\nTriggers: ✅\nVues: ✅\nDonnées: ✅`, 
-                 'green');
-          
-          log('\n📝 Prochaines étapes:', 'yellow');
-          log('   1. npm run dev           - Démarrer le serveur', 'yellow');
-          log('   2. http://localhost:3000 - Tester l\'API', 'yellow');
-          
-        } else {
-          logBox('✅ INITIALISATION TERMINÉE SANS DONNÉES!', 
-                 `Base: ${DB_NAME}\nSchéma: ✅\nTriggers: ✅\nVues: ✅\nDonnées: ❌`, 
-                 'green');
-                 
-          log('\n📝 Prochaines étapes:', 'yellow');
-          log('   1. Créer un utilisateur admin manuellement', 'yellow');
-          log('   2. npm run dev           - Démarrer le serveur', 'yellow');
-        }
-        
-        resolve();
-      });
-    });
+// Test de connexion au démarrage
+pool.query('SELECT NOW()', (err, res) => {
+  if (err) {
+    console.error('❌ Erreur de connexion à PostgreSQL:', err.message);
+    console.error('⚠️  Vérifiez vos paramètres de connexion dans .env');
   } else {
-    logBox('✅ INITIALISATION TERMINÉE!', 
-           `Base: ${DB_NAME}\nSchéma: ✅\nTriggers: ✅\nVues: ✅`, 
-           'green');
+    console.log('✅ Connexion PostgreSQL établie avec succès');
   }
-}
+});
 
-// Exécution
-if (require.main === module) {
-  initializeDatabase()
-    .then(() => {
-      log('\n👋 Au revoir!', 'cyan');
-      process.exit(0);
-    })
-    .catch((error) => {
-      log('\n❌ Erreur fatale:', 'red');
-      console.error(error);
-      process.exit(1);
-    });
-}
-
-module.exports = { initializeDatabase };
+module.exports = pool;

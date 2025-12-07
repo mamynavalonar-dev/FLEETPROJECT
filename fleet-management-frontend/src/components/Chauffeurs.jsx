@@ -1,6 +1,6 @@
 // fleet-management-frontend/src/components/Chauffeurs.jsx
 import React, { useState, useEffect } from 'react';
-import { Plus, Edit, Eye, UserX, Users, Clock, TrendingUp, AlertCircle } from 'lucide-react';
+import { Plus, Edit, Eye, UserX, Users, Clock, TrendingUp, AlertCircle, XCircle } from 'lucide-react';
 import { chauffeursAPI, handleAPIError } from '../services/api';
 
 const Chauffeurs = ({ userRole }) => {

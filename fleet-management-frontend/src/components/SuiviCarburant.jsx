@@ -1,6 +1,6 @@
-// fleet-management-frontend/src/components/SuiviCarburant.jsx
+// fleet-management-frontend/src/components/SuiviCarburant.jsx - AMÉLIORÉ
 import React, { useState, useEffect } from 'react';
-import { Upload, Download, Filter, Search, AlertCircle } from 'lucide-react';
+import { Upload, Download, Filter, Search, AlertCircle, CheckCircle, XCircle, FileText } from 'lucide-react';
 import { suiviCarburantAPI, importAPI, handleAPIError } from '../services/api';
 
 const SuiviCarburant = ({ userRole }) => {
@@ -8,6 +8,9 @@ const SuiviCarburant = ({ userRole }) => {
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadResult, setUploadResult] = useState(null);
+  const [showResultModal, setShowResultModal] = useState(false);
+  
   const [filtres, setFiltres] = useState({
     type_suivi: '',
     date_debut: '',
@@ -40,6 +43,7 @@ const SuiviCarburant = ({ userRole }) => {
 
     setUploading(true);
     setUploadProgress(0);
+    setUploadResult(null);
 
     try {
       const response = await importAPI.excel(file, (progressEvent) => {
@@ -48,7 +52,8 @@ const SuiviCarburant = ({ userRole }) => {
       });
 
       if (response.data.success) {
-        alert(`Import réussi!\nType détecté: ${response.data.typeFichier}\nSuccès: ${response.data.resultats.succes}\nAvertissements: ${response.data.resultats.avertissements}\nErreurs: ${response.data.resultats.erreurs}`);
+        setUploadResult(response.data);
+        setShowResultModal(true);
         chargerSuivis();
       }
     } catch (error) {
@@ -80,6 +85,22 @@ const SuiviCarburant = ({ userRole }) => {
           {uploading ? `Import... ${uploadProgress}%` : 'Importer Excel'}
         </label>
       </div>
+
+      {/* Barre de progression */}
+      {uploading && (
+        <div className="card">
+          <div className="mb-2 flex justify-between text-sm">
+            <span>Import en cours...</span>
+            <span>{uploadProgress}%</span>
+          </div>
+          <div className="w-full bg-gray-200 rounded-full h-2">
+            <div 
+              className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+              style={{ width: `${uploadProgress}%` }}
+            ></div>
+          </div>
+        </div>
+      )}
 
       {/* Filtres */}
       <div className="card">
@@ -134,12 +155,19 @@ const SuiviCarburant = ({ userRole }) => {
             />
           </div>
         </div>
+
+        <div className="mt-3 text-sm text-gray-600">
+          <strong>{suivis.length}</strong> entrée(s) trouvée(s)
+        </div>
       </div>
 
       {/* Tableau */}
       <div className="card">
         {loading ? (
-          <div className="text-center py-12">Chargement...</div>
+          <div className="text-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="text-gray-600 mt-4">Chargement...</p>
+          </div>
         ) : (
           <div className="table-container">
             <table>
@@ -160,7 +188,11 @@ const SuiviCarburant = ({ userRole }) => {
                 {suivis.length === 0 ? (
                   <tr>
                     <td colSpan="9" className="text-center py-12 text-gray-500">
-                      Aucun suivi trouvé. Importez un fichier Excel pour commencer.
+                      <div className="flex flex-col items-center gap-3">
+                        <FileText size={48} className="text-gray-300" />
+                        <p className="text-lg font-medium">Aucun suivi trouvé</p>
+                        <p className="text-sm">Importez un fichier Excel pour commencer</p>
+                      </div>
                     </td>
                   </tr>
                 ) : (
@@ -204,6 +236,111 @@ const SuiviCarburant = ({ userRole }) => {
           </div>
         )}
       </div>
+
+      {/* Modal Résultat d'Import */}
+      {showResultModal && uploadResult && (
+        <div className="modal-overlay" onClick={() => setShowResultModal(false)}>
+          <div className="modal-content max-w-3xl" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2 className="modal-title">Résultat de l'import</h2>
+              <button onClick={() => setShowResultModal(false)}>
+                <XCircle size={24} className="text-gray-500" />
+              </button>
+            </div>
+
+            <div className="space-y-6">
+              {/* Résumé global */}
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <h3 className="font-semibold text-blue-900 mb-2">
+                  📊 Fichier: {uploadResult.nomFichier}
+                </h3>
+                <div className="grid grid-cols-3 gap-4 mt-3">
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-green-600">{uploadResult.resultats.succes}</div>
+                    <div className="text-sm text-gray-600">Succès</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-orange-600">{uploadResult.resultats.avertissements}</div>
+                    <div className="text-sm text-gray-600">Avertissements</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-red-600">{uploadResult.resultats.erreurs}</div>
+                    <div className="text-sm text-gray-600">Erreurs</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Détails par feuille */}
+              <div>
+                <h3 className="font-semibold mb-3">📄 Détails par feuille ({uploadResult.nombreFeuilles} feuille(s))</h3>
+                <div className="space-y-3">
+                  {Object.entries(uploadResult.parFeuille).map(([nomFeuille, stats]) => (
+                    <div key={nomFeuille} className="border rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="font-medium">{nomFeuille}</h4>
+                        <span className="badge badge-info">{stats.type}</span>
+                      </div>
+                      
+                      <div className="grid grid-cols-4 gap-2 text-sm">
+                        <div>
+                          <span className="text-gray-600">Total:</span>
+                          <span className="font-medium ml-2">{stats.lignes}</span>
+                        </div>
+                        <div className="flex items-center gap-1 text-green-600">
+                          <CheckCircle size={14} />
+                          <span className="font-medium">{stats.succes}</span>
+                        </div>
+                        <div className="flex items-center gap-1 text-orange-600">
+                          <AlertCircle size={14} />
+                          <span className="font-medium">{stats.avertissements}</span>
+                        </div>
+                        <div className="flex items-center gap-1 text-red-600">
+                          <XCircle size={14} />
+                          <span className="font-medium">{stats.erreurs}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Détails des erreurs */}
+              {uploadResult.details && uploadResult.details.length > 0 && (
+                <div>
+                  <h3 className="font-semibold mb-3">⚠️ Détails des anomalies (premières 10)</h3>
+                  <div className="space-y-2 max-h-60 overflow-y-auto">
+                    {uploadResult.details.slice(0, 10).map((detail, index) => (
+                      <div 
+                        key={index} 
+                        className={`text-sm p-2 rounded ${
+                          detail.statut === 'error' ? 'bg-red-50 text-red-800' :
+                          'bg-orange-50 text-orange-800'
+                        }`}
+                      >
+                        <div className="font-medium">
+                          Feuille "{detail.feuille}", Ligne {detail.ligne}
+                        </div>
+                        <div className="text-xs mt-1">
+                          {detail.erreurs?.join(', ') || detail.message}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="flex justify-end gap-3 pt-4 border-t">
+                <button 
+                  onClick={() => setShowResultModal(false)} 
+                  className="btn btn-primary"
+                >
+                  Fermer
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
