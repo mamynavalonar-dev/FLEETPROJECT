@@ -39,16 +39,17 @@ router.post('/demandes-carburant', authentifier, async (req, res) => {
     
     // Générer le numéro de demande
     const demande = result.rows[0];
+    const numeroDemande = `DC-${new Date().toISOString().slice(0,10).replace(/-/g,'')}-${String(demande.id).padStart(4, '0')}`;
     await client.query(`
       UPDATE demandes_carburant 
       SET numero_demande = $1 
       WHERE id = $2
-    `, [`DC-${new Date().toISOString().slice(0,10).replace(/-/g,'')}-${String(demande.id).padStart(4, '0')}`, demande.id]);
+    `, [numeroDemande, demande.id]);
     
     await client.query('COMMIT');
     
     // Récupérer la demande mise à jour
-    const finalResult = await client.query('SELECT * FROM demandes_carburant WHERE id = $1', [demande.id]);
+    const finalResult = await pool.query('SELECT * FROM demandes_carburant WHERE id = $1', [demande.id]);
     
     res.status(201).json({ 
       success: true, 
@@ -305,25 +306,17 @@ router.post('/demandes-voiture', authentifier, async (req, res) => {
     
     // Générer le numéro de demande
     const demande = result.rows[0];
+    const numeroDemande = `DV-${new Date().toISOString().slice(0,10).replace(/-/g,'')}-${String(demande.id).padStart(4, '0')}`;
     await client.query(`
       UPDATE demandes_voiture 
       SET numero_demande = $1 
       WHERE id = $2
-    `, [`DV-${new Date().toISOString().slice(0,10).replace(/-/g,'')}-${String(demande.id).padStart(4, '0')}`, demande.id]);
+    `, [numeroDemande, demande.id]);
     
     await client.query('COMMIT');
     
     // Récupérer la demande mise à jour
-    const finalResult = await client.query(`
-          INSERT INTO demandes_voiture (
-            demandeur_id, date_proposee, objet, itineraire,
-            personnes_transportees, heure_depart_souhaitee,
-            heure_retour_probable, statut
-          ) VALUES ($1, $2, $3, $4, $5, $6, $7, 'en_attente_logistique')
-          RETURNING *
-        `, [req.user.id, date_proposee, objet, itineraire || null, 
-            personnes_transportees || null, heure_depart_souhaitee || null, 
-            heure_retour_probable || null]);
+    const finalResult = await pool.query('SELECT * FROM demandes_voiture WHERE id = $1', [demande.id]);
     
     res.status(201).json({ 
       success: true, 
