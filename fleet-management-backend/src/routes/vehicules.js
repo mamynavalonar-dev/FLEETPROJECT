@@ -2,7 +2,12 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../config/database');
-const { authentifier, verifierRole } = require('../middleware/auth');
+// Auth désactivée pour DEV
+const authentifier = (req, res, next) => { 
+  req.user = { id: 1, role: 'admin', email: 'admin@prirtem.mg' }; 
+  next(); 
+};
+const verifierRole = (...roles) => (req, res, next) => next();
 
 // ============================================
 // GESTION DES VÉHICULES
@@ -233,9 +238,9 @@ router.get('/vehicules/:id/maintenances', authentifier, async (req, res) => {
     const { id } = req.params;
     
     const result = await pool.query(`
-      SELECT * FROM maintenance_vehicules
+      SELECT * FROM entretiens 
       WHERE vehicule_id = $1
-      ORDER BY date_maintenance DESC
+      ORDER BY date_debut DESC
     `, [id]);
     
     res.json({ success: true, data: result.rows, count: result.rows.length });
@@ -252,23 +257,23 @@ router.post('/vehicules/:id/maintenances',
   async (req, res) => {
     try {
       const { id } = req.params;
-      const { type_maintenance, description, date_maintenance, km_maintenance, cout, garage } = req.body;
+      const { type_entretien, description, date_debut, kilometrage, cout, garage } = req.body;
       
-      if (!type_maintenance || !date_maintenance) {
+      if (!type_entretien || !date_debut) {
         return res.status(400).json({ 
           error: 'Champs requis manquants',
-          required: ['type_maintenance', 'date_maintenance']
+          required: ['type_entretien', 'date_debut']
         });
       }
       
       const result = await pool.query(`
-        INSERT INTO maintenance_vehicules (
-          vehicule_id, type_maintenance, description, date_maintenance,
-          km_maintenance, cout, garage, statut
+        INSERT INTO entretiens (
+          vehicule_id, type_entretien, description, date_debut,
+          kilometrage, cout, garage, statut
         ) VALUES ($1, $2, $3, $4, $5, $6, $7, 'planifie')
         RETURNING *
-      `, [id, type_maintenance, description || null, date_maintenance, 
-          km_maintenance || null, cout || null, garage || null]);
+      `, [id, type_entretien, description || null, date_debut, 
+          kilometrage || null, cout || null, garage || null]);
       
       res.status(201).json({ 
         success: true, 

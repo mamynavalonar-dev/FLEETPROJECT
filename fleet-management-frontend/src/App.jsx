@@ -15,23 +15,23 @@ function App() {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    // Simuler un utilisateur connecté pour le développement
-    // En production, utiliser authAPI.getCurrentUser()
+    // CORRECTION: Utiliser un useEffect qui ne s'exécute qu'une fois
     const mockUser = {
       id: 1,
       nom: 'Admin',
       prenom: 'Système',
       email: 'admin@prirtem.mg',
-      role: 'admin' // demandeur, logistique, raf, admin
+      role: 'admin'
     };
     setUser(mockUser);
-  }, []);
+  }, []); // 🔴 IMPORTANT: Tableau vide pour une seule exécution
 
   const handleRoleChange = (newRole) => {
-    setUser({ ...user, role: newRole });
+    setUser(prev => ({ ...prev, role: newRole })); // 🔴 CORRECTION: Utiliser la forme fonctionnelle
   };
 
-  const renderContent = () => {
+  // 🔴 CORRECTION: Mémoriser la fonction pour éviter les re-renders
+  const renderContent = React.useMemo(() => {
     switch (ongletActif) {
       case 'dashboard':
         return <Dashboard userRole={user?.role} />;
@@ -48,7 +48,7 @@ function App() {
       default:
         return <Dashboard userRole={user?.role} />;
     }
-  };
+  }, [ongletActif, user?.role, user?.id]); // 🔴 Dépendances minimales
 
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: BarChart3, roles: ['demandeur', 'logistique', 'raf', 'admin'] },
@@ -59,13 +59,24 @@ function App() {
     { id: 'chauffeurs', label: 'Chauffeurs', icon: Users, roles: ['logistique', 'admin'] }
   ];
 
-  const visibleMenuItems = menuItems.filter(item => 
-    item.roles.includes(user?.role)
+  const visibleMenuItems = React.useMemo(() => 
+    menuItems.filter(item => item.roles.includes(user?.role)),
+    [user?.role]
   );
+
+  if (!user) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Chargement...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="app">
-      {/* Navbar */}
       <nav className="navbar">
         <div className="navbar-content">
           <div className="navbar-brand">
@@ -80,7 +91,7 @@ function App() {
           
           <div className="navbar-actions">
             <select
-              value={user?.role || 'demandeur'}
+              value={user.role}
               onChange={(e) => handleRoleChange(e.target.value)}
               className="role-selector"
             >
@@ -91,14 +102,13 @@ function App() {
             </select>
             
             <div className="user-info">
-              <span>{user?.nom} {user?.prenom}</span>
-              <span className="user-role">{user?.role}</span>
+              <span>{user.nom} {user.prenom}</span>
+              <span className="user-role">{user.role}</span>
             </div>
           </div>
         </div>
       </nav>
 
-      {/* Menu de navigation */}
       <div className="nav-menu">
         <div className="nav-menu-content">
           {visibleMenuItems.map(item => {
@@ -117,12 +127,9 @@ function App() {
         </div>
       </div>
 
-      {/* Contenu principal */}
       <main className="main-content">
         <div className="content-wrapper">
-          {user ? renderContent() : (
-            <div className="loading">Chargement...</div>
-          )}
+          {renderContent}
         </div>
       </main>
     </div>

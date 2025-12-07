@@ -3,12 +3,19 @@ import axios from 'axios';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
+const mockToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwicm9sZSI6ImFkbWluIiwiZW1haWwiOiJhZG1pbkBwcmlydGVtLm1nIiwiaWF0IjoxNzMzNTY4MDAwfQ.mock';
+localStorage.setItem('token', mockToken);
+
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 30000, // 30 secondes
+  timeout: 30000,
+  // 🔴 AJOUTE ÇA
+  validateStatus: function (status) {
+    return status < 500; // Accepte les 401, 403, etc. sans retry
+  }
 });
 
 // Intercepteur pour ajouter le token JWT

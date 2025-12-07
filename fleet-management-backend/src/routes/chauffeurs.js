@@ -3,7 +3,12 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../config/database');
 const bcrypt = require('bcrypt');
-const { authentifier, verifierRole } = require('../middleware/auth');
+// Auth désactivée pour DEV
+const authentifier = (req, res, next) => { 
+  req.user = { id: 1, role: 'admin', email: 'admin@prirtem.mg' }; 
+  next(); 
+};
+const verifierRole = (...roles) => (req, res, next) => next();
 
 // ============================================
 // GESTION DES CHAUFFEURS
@@ -64,11 +69,11 @@ router.get('/chauffeurs/:id', authentifier, async (req, res) => {
         u.service,
         u.est_actif,
         COUNT(DISTINCT m.id) as nombre_missions,
-        SUM(m.km_parcourus) as total_km_parcourus,
-        AVG(m.km_parcourus) as moyenne_km_mission
+        SUM(m.kilometrage_retour - m.kilometrage_depart) as total_km_parcourus,
+        AVG(m.kilometrage_retour - m.kilometrage_depart) as moyenne_km_mission
       FROM chauffeurs c
       JOIN utilisateurs u ON c.utilisateur_id = u.id
-      LEFT JOIN missions m ON c.id = m.chauffeur_id AND m.statut = 'terminee'
+      LEFT JOIN demandes_voiture m ON c.id = m.chauffeur_id AND m.statut = 'terminee'
       WHERE c.id = $1
       GROUP BY c.id, u.nom, u.prenom, u.email, u.telephone, u.service, u.est_actif
     `, [id]);

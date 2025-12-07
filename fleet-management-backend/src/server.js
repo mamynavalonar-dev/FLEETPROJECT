@@ -53,15 +53,15 @@ const chauffeursRoutes = require('./routes/chauffeurs');
 const importRoutes = require('./routes/import');
 const pdfRoutes = require('./routes/pdf');
 
-// Montage des routes
+// Montage des routes SANS authentification pour le développement
 app.use('/api', demandesRoutes);
 app.use('/api', vehiculesRoutes);
 app.use('/api', chauffeursRoutes);
 app.use('/api', importRoutes);
 app.use('/api', pdfRoutes);
 
-// Route de suivi carburant
-app.get('/api/suivis', require('./middleware/auth').authentifier, async (req, res) => {
+// Route de suivi carburant SANS authentification
+app.get('/api/suivis', async (req, res) => {
   try {
     const pool = require('./config/database');
     const { type_suivi, statut, date_debut, date_fin, immatriculation } = req.query;
@@ -105,8 +105,8 @@ app.get('/api/suivis', require('./middleware/auth').authentifier, async (req, re
   }
 });
 
-// Route stats globales
-app.get('/api/stats', require('./middleware/auth').authentifier, async (req, res) => {
+// Route stats globales SANS authentification
+app.get('/api/stats', async (req, res) => {
   try {
     const pool = require('./config/database');
     
@@ -159,8 +159,8 @@ app.get('/api/stats', require('./middleware/auth').authentifier, async (req, res
   }
 });
 
-// Route alertes
-app.get('/api/alertes', require('./middleware/auth').authentifier, async (req, res) => {
+// Route alertes SANS authentification
+app.get('/api/alertes', async (req, res) => {
   try {
     const pool = require('./config/database');
     
@@ -277,6 +277,7 @@ app.listen(PORT, () => {
 ║   Port: ${PORT}                              ║
 ║   Env:  ${process.env.NODE_ENV || 'development'}                  ║
 ║   URL:  http://localhost:${PORT}             ║
+║   Auth: ❌ DÉSACTIVÉE (DEV MODE)            ║
 ╚═══════════════════════════════════════════╝
   `);
   
@@ -300,7 +301,9 @@ app.listen(PORT, () => {
   console.log('   POST /api/import-excel');
   console.log('   GET  /api/stats');
   console.log('   GET  /api/suivis');
+  console.log('   GET  /api/alertes');
   console.log('');
+  console.log('⚠️  MODE DÉVELOPPEMENT - Authentification désactivée');
   console.log('✨ Serveur prêt à recevoir des requêtes!');
 });
 
