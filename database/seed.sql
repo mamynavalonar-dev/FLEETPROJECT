@@ -1,5 +1,6 @@
 -- ============================================
--- DONNÉES INITIALES (SEED)
+-- DONNÉES INITIALES (SEED) - PARTIE 1/2
+-- Fichier: database/seed.sql
 -- FLEET MANAGEMENT SYSTEM
 -- ============================================
 
@@ -157,6 +158,13 @@ INSERT INTO demandes_carburant (
 ('CARB-2024-000005', 2, NULL, 9, 75.00, NULL, 'diesel',
  'Préparation mission hebdomadaire', 62000, 'en_attente',
  '2024-12-06 09:00:00', NULL, NULL, NULL);
+
+-- À SUIVRE DANS LA PARTIE 2...
+-- ============================================
+-- DONNÉES INITIALES (SEED) - PARTIE 2/2
+-- Fichier: database/seed.sql (SUITE)
+-- FLEET MANAGEMENT SYSTEM
+-- ============================================
 
 -- ============================================
 -- SUIVIS CARBURANT
@@ -319,6 +327,23 @@ BEGIN
     RAISE NOTICE 'Demandes voiture: % insérées', (SELECT COUNT(*) FROM demandes_voiture);
     RAISE NOTICE 'Suivis carburant: % insérés', (SELECT COUNT(*) FROM suivis_carburant);
     RAISE NOTICE 'Entretiens: % insérés', (SELECT COUNT(*) FROM entretiens);
+    RAISE NOTICE '==========================================';
+    RAISE NOTICE '';
+    RAISE NOTICE '📊 STATISTIQUES RAPIDES:';
+    RAISE NOTICE '  • Véhicules disponibles: %', (SELECT COUNT(*) FROM vehicules WHERE statut = 'disponible');
+    RAISE NOTICE '  • Véhicules en mission: %', (SELECT COUNT(*) FROM vehicules WHERE statut = 'en_mission');
+    RAISE NOTICE '  • Chauffeurs disponibles: %', (SELECT COUNT(*) FROM chauffeurs WHERE disponible = true);
+    RAISE NOTICE '  • Demandes en attente: %', (SELECT COUNT(*) FROM demandes_carburant WHERE statut = 'en_attente') + (SELECT COUNT(*) FROM demandes_voiture WHERE statut = 'en_attente');
+    RAISE NOTICE '==========================================';
+    RAISE NOTICE '';
+    RAISE NOTICE '👤 COMPTES DE TEST:';
+    RAISE NOTICE '  Admin: admin@prirtem.mg / Password123!';
+    RAISE NOTICE '  Gestionnaire: jean.randria@prirtem.mg / Password123!';
+    RAISE NOTICE '  Chauffeur: paul.andrianina@prirtem.mg / Password123!';
+    RAISE NOTICE '  Demandeur: tantely.rabe@prirtem.mg / Password123!';
+    RAISE NOTICE '==========================================';
+    RAISE NOTICE '';
+    RAISE NOTICE '✅ DONNÉES SEED INSÉRÉES AVEC SUCCÈS!';
     RAISE NOTICE '==========================================';
 END $$;
 

@@ -1,5 +1,6 @@
 -- ============================================
 -- TRIGGERS ET FONCTIONS AUTOMATIQUES
+-- Fichier: database/triggers.sql
 -- FLEET MANAGEMENT SYSTEM
 -- ============================================
 
@@ -369,7 +370,7 @@ $$ LANGUAGE plpgsql;
 DO $$
 BEGIN
     RAISE NOTICE '==========================================';
-    RAISE NOTICE 'TRIGGERS CRÉÉS';
+    RAISE NOTICE 'TRIGGERS CRÉÉS AVEC SUCCÈS';
     RAISE NOTICE '==========================================';
 END $$;
 
@@ -381,6 +382,29 @@ FROM information_schema.triggers
 WHERE trigger_schema = 'public'
 GROUP BY trigger_name, event_object_table, action_timing
 ORDER BY event_object_table, trigger_name;
+
+DO $$
+BEGIN
+    RAISE NOTICE '==========================================';
+    RAISE NOTICE 'Triggers disponibles:';
+    RAISE NOTICE '  ✓ auto_numero_demande_carburant';
+    RAISE NOTICE '  ✓ auto_numero_demande_voiture';
+    RAISE NOTICE '  ✓ update_statut_vehicule_affectation';
+    RAISE NOTICE '  ✓ calcul_consommation';
+    RAISE NOTICE '  ✓ update_kilometrage_vehicule';
+    RAISE NOTICE '  ✓ validation_permis_chauffeur';
+    RAISE NOTICE '  ✓ log_historique_entretien';
+    RAISE NOTICE '  ✓ update_derniere_connexion';
+    RAISE NOTICE '  ✓ validation_demande_voiture';
+    RAISE NOTICE '  ✓ auto_suivi_carburant';
+    RAISE NOTICE '  ✓ update_missions_chauffeur';
+    RAISE NOTICE '==========================================';
+    RAISE NOTICE 'Fonctions utilitaires:';
+    RAISE NOTICE '  ✓ verifier_disponibilite_vehicule()';
+    RAISE NOTICE '  ✓ calculer_consommation_moyenne()';
+    RAISE NOTICE '  ✓ generer_numero_demande()';
+    RAISE NOTICE '==========================================';
+END $$;
 
 -- ============================================
 -- FIN DES TRIGGERS

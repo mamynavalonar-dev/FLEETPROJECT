@@ -1,5 +1,6 @@
 -- ============================================
 -- SCHÉMA COMPLET BASE DE DONNÉES FLEET MANAGEMENT
+-- Fichier: database/shema.sql
 -- ============================================
 
 -- Suppression des tables existantes (ordre inversé des dépendances)
@@ -237,6 +238,7 @@ CREATE TABLE suivis_carburant (
     bon_commande VARCHAR(100),
     fournisseur VARCHAR(255),
     notes TEXT,
+    nom_feuille VARCHAR(255),
     
     CONSTRAINT quantite_positive CHECK (quantite > 0),
     CONSTRAINT prix_positif CHECK (prix_unitaire IS NULL OR prix_unitaire >= 0),
@@ -246,6 +248,7 @@ CREATE TABLE suivis_carburant (
 CREATE INDEX idx_suivis_carburant_vehicule ON suivis_carburant(vehicule_id);
 CREATE INDEX idx_suivis_carburant_date ON suivis_carburant(date_ravitaillement);
 CREATE INDEX idx_suivis_carburant_demande_carburant ON suivis_carburant(demande_carburant_id);
+CREATE INDEX idx_suivis_carburant_nom_feuille ON suivis_carburant(nom_feuille);
 
 -- ============================================
 -- TABLE: entretiens
@@ -306,6 +309,31 @@ COMMENT ON TABLE demandes_voiture IS 'Demandes d''utilisation de véhicules';
 COMMENT ON TABLE suivis_carburant IS 'Historique des ravitaillements';
 COMMENT ON TABLE entretiens IS 'Opérations de maintenance des véhicules';
 COMMENT ON TABLE historique_entretiens IS 'Historique des modifications d''entretien';
+
+COMMENT ON COLUMN suivis_carburant.nom_feuille IS 'Nom de la feuille Excel source';
+
+-- ============================================
+-- AFFICHAGE RÉSUMÉ
+-- ============================================
+
+DO $$
+BEGIN
+    RAISE NOTICE '==========================================';
+    RAISE NOTICE 'SCHÉMA BASE DE DONNÉES CRÉÉ AVEC SUCCÈS';
+    RAISE NOTICE '==========================================';
+    RAISE NOTICE 'Tables créées:';
+    RAISE NOTICE '  ✓ utilisateurs';
+    RAISE NOTICE '  ✓ services';
+    RAISE NOTICE '  ✓ chauffeurs';
+    RAISE NOTICE '  ✓ vehicules';
+    RAISE NOTICE '  ✓ affectations';
+    RAISE NOTICE '  ✓ demandes_carburant';
+    RAISE NOTICE '  ✓ demandes_voiture';
+    RAISE NOTICE '  ✓ suivis_carburant';
+    RAISE NOTICE '  ✓ entretiens';
+    RAISE NOTICE '  ✓ historique_entretiens';
+    RAISE NOTICE '==========================================';
+END $$;
 
 -- ============================================
 -- FIN DU SCHÉMA

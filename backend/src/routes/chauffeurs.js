@@ -1,8 +1,9 @@
-// fleet-management-backend/src/routes/chauffeurs.js
+// fleet-management-backend/src/routes/chauffeurs.js - CORRIGÉ
 const express = require('express');
 const router = express.Router();
 const pool = require('../config/database');
 const bcrypt = require('bcrypt');
+
 // Auth désactivée pour DEV
 const authentifier = (req, res, next) => { 
   req.user = { id: 1, role: 'admin', email: 'admin@prirtem.mg' }; 
@@ -26,12 +27,12 @@ router.get('/chauffeurs', authentifier, async (req, res) => {
         u.prenom,
         u.email,
         u.telephone,
-        u.est_actif,
-        COUNT(DISTINCT m.id) as nombre_missions,
-        SUM(m.km_parcourus) as total_km_parcourus
+        u.actif as est_actif,
+        COUNT(DISTINCT dv.id) FILTER (WHERE dv.statut = 'terminee') as nombre_missions,
+        COALESCE(SUM(dv.kilometrage_retour - dv.kilometrage_depart) FILTER (WHERE dv.statut = 'terminee'), 0) as total_km_parcourus
       FROM chauffeurs c
       JOIN utilisateurs u ON c.utilisateur_id = u.id
-      LEFT JOIN missions m ON c.id = m.chauffeur_id AND m.statut = 'terminee'
+      LEFT JOIN demandes_voiture dv ON c.id = dv.chauffeur_id
       WHERE 1=1
     `;
     
@@ -39,15 +40,24 @@ router.get('/chauffeurs', authentifier, async (req, res) => {
     let paramCount = 1;
     
     if (statut) {
-      query += ` AND c.statut = $${paramCount++}`;
-      params.push(statut);
+      query += ` AND c.disponible = $${paramCount++}`;
+      params.push(statut === 'disponible');
     }
     
-    query += ` GROUP BY c.id, u.nom, u.prenom, u.email, u.telephone, u.est_actif
-               ORDER BY u.nom, u.prenom`;
+    query += ` 
+      GROUP BY c.id, u.nom, u.prenom, u.email, u.telephone, u.actif
+      ORDER BY u.nom, u.prenom
+    `;
     
     const result = await pool.query(query, params);
-    res.json({ success: true, data: result.rows, count: result.rows.length });
+    
+    // Ajouter le statut basé sur disponible
+    const rows = result.rows.map(row => ({
+      ...row,
+      statut: row.disponible ? 'disponible' : 'indisponible'
+    }));
+    
+    res.json({ success: true, data: rows, count: rows.length });
   } catch (error) {
     console.error('Erreur récupération chauffeurs:', error);
     res.status(500).json({ error: error.message });
@@ -66,23 +76,27 @@ router.get('/chauffeurs/:id', authentifier, async (req, res) => {
         u.prenom,
         u.email,
         u.telephone,
-        u.service,
         u.actif as est_actif,
-        COUNT(DISTINCT m.id) as nombre_missions,
-        SUM(m.kilometrage_retour - m.kilometrage_depart) as total_km_parcourus,
-        AVG(m.kilometrage_retour - m.kilometrage_depart) as moyenne_km_mission
+        COUNT(DISTINCT dv.id) FILTER (WHERE dv.statut = 'terminee') as nombre_missions,
+        COALESCE(SUM(dv.kilometrage_retour - dv.kilometrage_depart) FILTER (WHERE dv.statut = 'terminee'), 0) as total_km_parcourus,
+        COALESCE(AVG(dv.kilometrage_retour - dv.kilometrage_depart) FILTER (WHERE dv.statut = 'terminee'), 0) as moyenne_km_mission
       FROM chauffeurs c
       JOIN utilisateurs u ON c.utilisateur_id = u.id
-      LEFT JOIN demandes_voiture m ON c.id = m.chauffeur_id AND m.statut = 'terminee'
+      LEFT JOIN demandes_voiture dv ON c.id = dv.chauffeur_id
       WHERE c.id = $1
-      GROUP BY c.id, u.nom, u.prenom, u.email, u.telephone, u.service, u.actif
+      GROUP BY c.id, u.nom, u.prenom, u.email, u.telephone, u.actif
     `, [id]);
     
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Chauffeur non trouvé' });
     }
     
-    res.json({ success: true, data: result.rows[0] });
+    const chauffeur = {
+      ...result.rows[0],
+      statut: result.rows[0].disponible ? 'disponible' : 'indisponible'
+    };
+    
+    res.json({ success: true, data: chauffeur });
   } catch (error) {
     console.error('Erreur récupération chauffeur:', error);
     res.status(500).json({ error: error.message });
@@ -92,21 +106,20 @@ router.get('/chauffeurs/:id', authentifier, async (req, res) => {
 // Créer un nouveau chauffeur
 router.post('/chauffeurs', 
   authentifier, 
-  verifierRole('logistique', 'admin'), 
+  verifierRole('gestionnaire', 'admin'), 
   async (req, res) => {
     const client = await pool.connect();
     try {
       const {
         nom, prenom, email, telephone,
-        numero_permis, type_permis, date_expiration_permis,
-        photo_url
+        numero_permis, categories_permis, date_expiration_permis
       } = req.body;
       
       // Validation
-      if (!nom || !prenom || !email || !numero_permis || !type_permis || !date_expiration_permis) {
+      if (!nom || !prenom || !email || !numero_permis || !date_expiration_permis) {
         return res.status(400).json({ 
           error: 'Champs requis manquants',
-          required: ['nom', 'prenom', 'email', 'numero_permis', 'type_permis', 'date_expiration_permis']
+          required: ['nom', 'prenom', 'email', 'numero_permis', 'date_expiration_permis']
         });
       }
       
@@ -142,20 +155,28 @@ router.post('/chauffeurs',
       
       // Créer l'utilisateur
       const userResult = await client.query(`
-        INSERT INTO utilisateurs (nom, prenom, email, mot_de_passe, role, telephone, service)
-        VALUES ($1, $2, $3, $4, 'chauffeur', $5, 'Logistique')
+        INSERT INTO utilisateurs (nom, prenom, email, mot_de_passe, role, telephone)
+        VALUES ($1, $2, $3, $4, 'chauffeur', $5)
         RETURNING id
       `, [nom, prenom, email, hashedPassword, telephone || null]);
       
       // Créer le chauffeur
       const chauffeurResult = await client.query(`
         INSERT INTO chauffeurs (
-          utilisateur_id, numero_permis, type_permis, 
-          date_expiration_permis, photo_url, statut
-        ) VALUES ($1, $2, $3, $4, $5, 'disponible')
+          utilisateur_id, 
+          numero_permis, 
+          date_obtention_permis,
+          date_expiration_permis, 
+          categories_permis,
+          disponible
+        ) VALUES ($1, $2, CURRENT_DATE, $3, $4, true)
         RETURNING *
-      `, [userResult.rows[0].id, numero_permis, type_permis, 
-          date_expiration_permis, photo_url || null]);
+      `, [
+        userResult.rows[0].id, 
+        numero_permis, 
+        date_expiration_permis, 
+        categories_permis || ['B']
+      ]);
       
       await client.query('COMMIT');
       
@@ -178,7 +199,7 @@ router.post('/chauffeurs',
 // Modifier un chauffeur
 router.put('/chauffeurs/:id', 
   authentifier, 
-  verifierRole('logistique', 'admin'), 
+  verifierRole('gestionnaire', 'admin'), 
   async (req, res) => {
     const client = await pool.connect();
     try {
@@ -188,8 +209,14 @@ router.put('/chauffeurs/:id',
       await client.query('BEGIN');
       
       // Champs du chauffeur
-      const champsChauffeur = ['numero_permis', 'type_permis', 'date_expiration_permis', 
-                               'photo_url', 'statut', 'note_evaluation'];
+      const champsChauffeur = [
+        'numero_permis', 
+        'date_expiration_permis', 
+        'categories_permis',
+        'disponible',
+        'note_moyenne'
+      ];
+      
       const setChauffeur = [];
       const valuesChauffeur = [];
       let paramCount = 1;
@@ -269,7 +296,7 @@ router.put('/chauffeurs/:id',
 // Désactiver un chauffeur
 router.put('/chauffeurs/:id/desactiver', 
   authentifier, 
-  verifierRole('logistique', 'admin'), 
+  verifierRole('gestionnaire', 'admin'), 
   async (req, res) => {
     const client = await pool.connect();
     try {
@@ -279,7 +306,7 @@ router.put('/chauffeurs/:id/desactiver',
       
       // Vérifier s'il y a des missions en cours
       const missionsEnCours = await client.query(
-        'SELECT id FROM missions WHERE chauffeur_id = $1 AND statut = $2',
+        'SELECT id FROM demandes_voiture WHERE chauffeur_id = $1 AND statut = $2',
         [id, 'en_cours']
       );
       
@@ -292,8 +319,8 @@ router.put('/chauffeurs/:id/desactiver',
       
       // Désactiver le chauffeur
       await client.query(
-        'UPDATE chauffeurs SET statut = $1 WHERE id = $2',
-        ['indisponible', id]
+        'UPDATE chauffeurs SET disponible = false WHERE id = $1',
+        [id]
       );
       
       // Désactiver l'utilisateur
@@ -317,80 +344,9 @@ router.put('/chauffeurs/:id/desactiver',
     }
 });
 
-// ============================================
-// MISSIONS DU CHAUFFEUR
-// ============================================
-
-// Récupérer les missions d'un chauffeur
-router.get('/chauffeurs/:id/missions', authentifier, async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { statut, date_debut, date_fin } = req.query;
-    
-    let query = `
-      SELECT 
-        m.*,
-        v.immatriculation,
-        v.marque,
-        v.modele,
-        dv.objet,
-        dv.itineraire,
-        u.nom as demandeur_nom,
-        u.prenom as demandeur_prenom
-      FROM missions m
-      JOIN vehicules v ON m.vehicule_id = v.id
-      LEFT JOIN demandes_voiture dv ON m.demande_voiture_id = dv.id
-      LEFT JOIN utilisateurs u ON dv.demandeur_id = u.id
-      WHERE m.chauffeur_id = $1
-    `;
-    
-    const params = [id];
-    let paramCount = 2;
-    
-    if (statut) {
-      query += ` AND m.statut = $${paramCount++}`;
-      params.push(statut);
-    }
-    
-    if (date_debut) {
-      query += ` AND m.date_debut >= $${paramCount++}`;
-      params.push(date_debut);
-    }
-    
-    if (date_fin) {
-      query += ` AND m.date_debut <= $${paramCount++}`;
-      params.push(date_fin);
-    }
-    
-    query += ' ORDER BY m.date_debut DESC';
-    
-    const result = await pool.query(query, params);
-    res.json({ success: true, data: result.rows, count: result.rows.length });
-  } catch (error) {
-    console.error('Erreur récupération missions:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// ============================================
-// DASHBOARDS
-// ============================================
-
-// Dashboard chauffeurs
-router.get('/dashboard/chauffeurs', authentifier, async (req, res) => {
-  try {
-    const result = await pool.query('SELECT * FROM dashboard_chauffeurs');
-    res.json({ success: true, data: result.rows });
-  } catch (error) {
-    console.error('Erreur dashboard chauffeurs:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
 // Chauffeurs disponibles pour une date
 router.get('/chauffeurs/disponibles/:date', 
   authentifier, 
-  verifierRole('logistique', 'admin'), 
   async (req, res) => {
     try {
       const { date } = req.params;
@@ -401,18 +357,19 @@ router.get('/chauffeurs/disponibles/:date',
           u.nom,
           u.prenom,
           c.numero_permis,
-          c.type_permis,
-          c.note_evaluation
+          c.categories_permis,
+          c.note_moyenne
         FROM chauffeurs c
         JOIN utilisateurs u ON c.utilisateur_id = u.id
-        WHERE c.statut = 'disponible'
+        WHERE c.disponible = true
         AND c.id NOT IN (
           SELECT DISTINCT chauffeur_id 
           FROM demandes_voiture 
-          WHERE date_proposee = $1 
-          AND statut IN ('valide', 'en_cours')
+          WHERE date_debut::date = $1 
+          AND statut IN ('approuvee', 'en_cours')
+          AND chauffeur_id IS NOT NULL
         )
-        ORDER BY c.note_evaluation DESC NULLS LAST, u.nom
+        ORDER BY c.note_moyenne DESC NULLS LAST, u.nom
       `, [date]);
       
       res.json({ success: true, data: result.rows, count: result.rows.length });

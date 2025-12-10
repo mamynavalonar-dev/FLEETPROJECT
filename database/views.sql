@@ -1,5 +1,6 @@
 -- ============================================
 -- VUES POUR REQUÊTES COMPLEXES
+-- Fichier: database/views.sql
 -- FLEET MANAGEMENT SYSTEM
 -- ============================================
 
@@ -409,6 +410,27 @@ SELECT
     -- Alertes
     (SELECT COUNT(*) FROM vue_alertes WHERE priorite = 'critique') AS alertes_critiques,
     (SELECT COUNT(*) FROM vue_alertes WHERE priorite = 'haute') AS alertes_importantes;
+
+-- ============================================
+-- AFFICHAGE RÉSUMÉ
+-- ============================================
+
+DO $$
+BEGIN
+    RAISE NOTICE '==========================================';
+    RAISE NOTICE 'VUES CRÉÉES AVEC SUCCÈS';
+    RAISE NOTICE '==========================================';
+    RAISE NOTICE 'Vues disponibles:';
+    RAISE NOTICE '  ✓ vue_vehicules_complet';
+    RAISE NOTICE '  ✓ vue_demandes_carburant';
+    RAISE NOTICE '  ✓ vue_demandes_voiture';
+    RAISE NOTICE '  ✓ vue_stats_vehicules';
+    RAISE NOTICE '  ✓ vue_stats_chauffeurs';
+    RAISE NOTICE '  ✓ vue_consommation_mensuelle';
+    RAISE NOTICE '  ✓ vue_alertes';
+    RAISE NOTICE '  ✓ vue_dashboard_stats';
+    RAISE NOTICE '==========================================';
+END $$;
 
 -- ============================================
 -- FIN DES VUES
